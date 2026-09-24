@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{info.name}}{% endblock %}
+{% block body %}
+<div class="panel">
+<h3>🧾 {{info.name}} {% if master %}• {{master.phone}} • {{master.ctype}}{% endif %}</h3>
+<div class="cards">
+<div class="card bill"><small>बिल</small><b>₹{{"{:,.0f}".format(info.billed)}}</b></div>
+<div class="card got"><small>जमा</small><b>₹{{"{:,.0f}".format(info.received)}}</b></div>
+<div class="card due"><small>बाकी</small><b>₹{{"{:,.0f}".format(info.pending)}}</b></div>
+<div class="card warn"><small>बाहेर माल</small><b>{{info.outside}}</b></div>
+</div>
+<p><button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('wa').textContent);this.textContent='Copied ✓'">📋 WhatsApp Copy</button></p>
+<p id="wa" class="panel">{{wa}}</p>
+<table><tr><th>Date</th><th>Type</th><th class="l">Item</th><th>Qty</th><th>Bill</th><th>Paid</th><th class="l">Note</th></tr>
+{% for r in rows %}
+<tr><td>{{r.date_disp}}</td><td><span class="tag {{r.type}}">{{r.type}}</span></td>
+<td class="l">{{r.item}} {{r.item_name}}</td><td>{{r.qty}}</td>
+<td>{{"{:,.0f}".format(r.bill)}}</td><td>{{"{:,.0f}".format(r.paid)}}</td><td class="l">{{r.note}}</td></tr>
+{% endfor %}</table>
+<br><a class="btn ghost" href="/customers">← परत</a>
+</div>
+{% endblock %}

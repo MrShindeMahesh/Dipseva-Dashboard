@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block body %}
+<form method="get" class="panel" style="display:flex;gap:8px;align-items:center">
+<label>तारीख / Date <input type="date" name="today" value="{{today}}"></label>
+<button class="btn ghost" type="submit">पहा</button>
+<a class="btn" href="/entry">➕ नवीन नोंद / New Entry</a>
+</form>
+<div class="cards">
+<div class="card bill"><small>एकूण बिल • Billed</small><b>₹{{"{:,.0f}".format(s.billed)}}</b></div>
+<div class="card got"><small>जमा • Received</small><b>₹{{"{:,.0f}".format(s.received)}}</b></div>
+<div class="card due"><small>येणे बाकी • Pending</small><b>₹{{"{:,.0f}".format(s.pending)}}</b></div>
+<div class="card warn"><small>आजची जमा • Today</small><b>₹{{"{:,.0f}".format(s.today_paid)}}</b><small>बिल ₹{{"{:,.0f}".format(s.today_billed)}}</small></div>
+<div class="card due"><small>थकबाकीदार • Due</small><b>{{s.due_count}}</b></div>
+<div class="card warn"><small>कमी माल • Low stock</small><b>{{s.low|length}}</b></div>
+</div>
+<div class="grid2">
+<div class="panel">
+<h3>🔴 जास्त बाकी • Top Pending</h3>
+<table><tr><th class="l">ग्राहक</th><th>बिल</th><th>जमा</th><th>बाकी</th><th>बाहेर</th></tr>
+{% for e in s.khata[:10] %}
+<tr><td class="l"><a href="/customer/{{e.name}}">{{e.name}}</a></td>
+<td>{{"{:,.0f}".format(e.billed)}}</td><td>{{"{:,.0f}".format(e.received)}}</td>
+<td class="neg">{{"{:,.0f}".format(e.pending)}}</td><td>{{e.outside}}</td></tr>
+{% endfor %}</table>
+<a class="btn ghost" href="/customers">सर्व खाते पहा</a>
+</div>
+<div class="panel">
+<h3>📅 10 दिवस • Collection</h3>
+<div class="bars">
+{% for d in s.days %}<div class="bar" title="{{d.date}} ₹{{d.received}}" style="height:{{ (d.received/(s.days|map(attribute='received')|max or 1))*100 }}%"><span>{{d.date}}</span></div>{% endfor %}
+</div><br>
+<table><tr><th>Date</th><th>Bill</th><th>Got</th></tr>
+{% for d in s.days[-5:]|reverse %}<tr><td>{{d.date}}</td><td>{{"{:,.0f}".format(d.billed)}}</td><td class="pos">{{"{:,.0f}".format(d.received)}}</td></tr>{% endfor %}</table>
+</div>
+</div>
+<div class="panel">
+<h3>🕒 नवीन नोंदी • Recent</h3>
+<table><tr><th>Date</th><th class="l">Customer</th><th>Type</th><th class="l">Item</th><th>Qty</th><th>Bill</th><th>Paid</th></tr>
+{% for r in recent %}
+<tr><td>{{r.date_disp}}</td><td class="l">{{r.customer}}</td><td><span class="tag {{r.type}}">{{r.type}}</span></td>
+<td class="l">{{r.item}} {{r.item_name}}</td><td>{{r.qty}}</td><td>{{"{:,.0f}".format(r.bill)}}</td><td>{{"{:,.0f}".format(r.paid)}}</td></tr>
+{% endfor %}</table>
+</div>
+{% if s.low %}
+<div class="panel"><h3>⚠️ कमी माल • Low Stock</h3>
+<table><tr><th class="l">Item</th><th>In Hand</th><th>Min</th></tr>
+{% for e in s.low %}<tr><td class="l">{{e.id}} • {{e.name}}</td><td class="neg">{{e.inhand}}</td><td>{{e.min}}</td></tr>{% endfor %}</table>
+</div>
+{% endif %}
+{% endblock %}
