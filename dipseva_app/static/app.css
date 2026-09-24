@@ -80,3 +80,35 @@ footer{color:var(--faint);font-size:12px;padding:24px 4px}
 .search{display:flex;gap:8px;margin-bottom:12px}
 .wa{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px 14px;font-size:14px}
 .mr{font-family:Mukta,Inter,sans-serif}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+ text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.step b{display:block;font-size:14px}
+.step span{font-size:12px;color:var(--mut)}
+.step.on{background:#1C1917;color:#fff;border-color:#1C1917}
+.step.on span{color:#D6C7A8}
+.entry-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start}
+@media(max-width:1000px){.entry-grid{grid-template-columns:1fr}}
+.form-card{padding:20px}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:700px){.frow2,.frow3{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 2px}
+.chip{background:#FDFBF6;border:1px solid var(--line);border-radius:20px;padding:6px 13px;
+ font-size:12px;font-weight:600;cursor:pointer;color:var(--ink)}
+.chip:hover{border-color:var(--navy);color:var(--navy)}
+.stepper{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.stepper button{width:40px;border:0;background:#FDFBF6;font-size:18px;cursor:pointer;color:var(--ink)}
+.stepper input{border:0;text-align:center;flex:1;min-width:0}
+.stepper input:focus{outline:none}
+.form-act{margin-top:16px}
+.btn.big{width:100%;padding:14px;font-size:15px}
+.summary{position:sticky;top:20px}
+.summary h3{font-family:Georgia,serif}
+.sumrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F3EDE0;font-size:14px}
+.sumrow span{color:var(--mut)}
+.total{display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+ background:#1C1917;color:#fff;border-radius:10px;padding:14px 16px}
+.total span{font-size:13px;color:#D6C7A8}
+.total b{font-size:26px;font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--mut);margin-top:10px}
