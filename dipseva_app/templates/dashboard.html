@@ -8,10 +8,10 @@
 <div class="field"><label>&nbsp;<button class="btn ghost" type="submit">View</button></label></div>
 </form>
 <div class="kpis">
-<div class="kpi gold"><small>Total billed</small><b>₹{{"{:,.0f}".format(s.billed)}}</b><span>Lifetime volume</span></div>
-<div class="kpi green"><small>Collected</small><b>₹{{"{:,.0f}".format(s.received)}}</b><span>Cash + UPI in</span></div>
-<div class="kpi rose"><small>Receivable</small><b>₹{{"{:,.0f}".format(s.pending)}}</b><span>{{s.due_count}} customers pending</span></div>
-<div class="kpi teal"><small>Today</small><b>₹{{"{:,.0f}".format(s.today_paid)}}</b><span>Billed ₹{{"{:,.0f}".format(s.today_billed)}} · Low stock {{s.low|length}}</span></div>
+<div class="kpi"><small>Total billed</small><b>₹{{"{:,.0f}".format(s.billed)}}</b><span>Lifetime volume</span></div>
+<div class="kpi"><small>Collected</small><b>₹{{"{:,.0f}".format(s.received)}}</b><span>Cash + UPI in</span></div>
+<div class="kpi hero"><small>Receivable</small><b>₹{{"{:,.0f}".format(s.pending)}}</b><span>{{s.due_count}} customers pending</span></div>
+<div class="kpi"><small>Today</small><b>₹{{"{:,.0f}".format(s.today_paid)}}</b><span>Billed ₹{{"{:,.0f}".format(s.today_billed)}} · Low stock {{s.low|length}}</span></div>
 </div>
 <div class="grid">
 <div class="card">

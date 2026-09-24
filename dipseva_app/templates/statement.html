@@ -4,10 +4,10 @@
 {% block sub %}{% if master %}{{master.phone}} · {{master.ctype}}{% else %}Customer statement{% endif %}{% endblock %}
 {% block body %}
 <div class="kpis">
-<div class="kpi gold"><small>Billed</small><b>₹{{"{:,.0f}".format(info.billed)}}</b></div>
-<div class="kpi green"><small>Paid</small><b>₹{{"{:,.0f}".format(info.received)}}</b></div>
+<div class="kpi"><small>Billed</small><b>₹{{"{:,.0f}".format(info.billed)}}</b></div>
+<div class="kpi"><small>Paid</small><b>₹{{"{:,.0f}".format(info.received)}}</b></div>
 <div class="kpi rose"><small>Due</small><b>₹{{"{:,.0f}".format(info.pending)}}</b></div>
-<div class="kpi teal"><small>Material outside</small><b>{{info.outside}}</b></div>
+<div class="kpi"><small>Material outside</small><b>{{info.outside}}</b></div>
 </div>
 <div class="card" style="margin-top:14px">
 <h3>Share</h3><div class="sub">One-tap WhatsApp text</div>
