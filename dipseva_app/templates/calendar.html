@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Calendar{% endblock %}
+{% block head %}Calendar{% endblock %}
+{% block sub %}Tap a date — see every customer of that day and the stock that moved{% endblock %}
+{% block actions %}
+<a class="btn ghost sm" href="/calendar?d={{today}}">Today</a>
+<a class="btn sm" href="/entry">+ New entry</a>
+{% endblock %}
+{% block body %}
+<div class="kpis">
+<div class="kpi"><small>Billed · {{month_lbl}}</small><b>₹{{'{:,.0f}'.format(st.bill)}}</b><span>{{st.lines}} ledger lines</span></div>
+<div class="kpi"><small>Collected · {{month_lbl}}</small><b>₹{{'{:,.0f}'.format(st.paid)}}</b><span>cash + UPI in</span></div>
+<div class="kpi hero"><small>{{sel_day}} · {{sel_disp}}</small><b>₹{{'{:,.0f}'.format(day.get('bill',0))}}</b><span>{{day.get('custn',0)}} customers · {{day.get('lines',0)}} lines</span></div>
+<div class="kpi"><small>Material moved that day</small><b>{{day.get('given',0)|round|int}} ↑ / {{day.get('returned',0)|round|int}} ↓</b><span>given out / came back</span></div>
+</div>
+<div class="calwrap">
+<div class="card calcard">
+<div class="calhead">
+<a class="btn ghost sm" href="/calendar?m={{prevm}}&d={{prevm}}-01" title="Previous month">←</a>
+<b class="calmonth">{{month_lbl}}</b>
+<a class="btn ghost sm" href="/calendar?m={{nextm}}&d={{nextm}}-01" title="Next month">→</a>
+<form method="get" class="caljump">
+<input type="date" name="d" value="{{sel}}">
+<button class="btn sm" type="submit">Open day</button>
+</form>
+<span class="countchip">Month: {{st.custs}} customers · {{st.days}} active days</span>
+</div>
+<div class="calgrid">
+{% for w in wdays %}<div class="wd">{{w}}</div>{% endfor %}
+{% for wk in weeks %}{% for c in wk %}
+<a class="cday{{' out' if not c.here else ''}}{{' sel' if c.on else ''}}{{' istoday' if c.is_today else ''}}" href="/calendar?m={{m}}&d={{c.iso}}">
+<span class="dn">{{c.d}}</span>
+{% if c.lines %}<span class="cbill">₹{{'{:,.0f}'.format(c.bill)}}</span>
+<span class="ccust">{{c.custn}} cust · {{c.lines}} lines</span>
+<span class="cqty">↑{{c.given|round|int}} ↓{{c.returned|round|int}}</span>
+{% if c.paid %}<span class="cpaid">₹{{'{:,.0f}'.format(c.paid)}} in</span>{% endif %}
+{% else %}<span class="cnone">—</span>{% endif %}
+</a>
+{% endfor %}{% endfor %}
+</div>
+<div class="note">Empty days show “—”. Days with money or material show the bill, customer count and units moved (↑ given, ↓ returned).</div>
+</div>
+</div>
+<div class="daybar">
+<h3>{{sel_day}} · {{sel_disp}}</h3>
+<span class="countchip">{{groups|length}} customer{{'' if groups|length==1 else 's'}} · Bill ₹{{'{:,.0f}'.format(day.get('bill',0))}} · In ₹{{'{:,.0f}'.format(day.get('paid',0))}}</span>
+<span class="grow"></span>
+<a class="btn ghost sm" href="/entry?date={{sel}}">+ Entry on this date</a>
+<a class="btn ghost sm" href="/?today={{sel}}">Open in overview</a>
+</div>
+{% if groups %}
+{% for g in groups %}
+<div class="card daygroup">
+<div class="dayhead">
+<b>{{g.name}}</b>
+<span class="note">Gave {{g.given|round|int}} · Took {{g.returned|round|int}}</span>
+<span class="grow"></span>
+<b class="daybill">₹{{'{:,.0f}'.format(g.bill)}}</b>
+{% if g.paid %}<span class="badge OK">₹{{'{:,.0f}'.format(g.paid)}} in</span>{% endif %}
+<a class="iconbtn" title="Open statement" href="/customer/{{g.name|urlencode}}"><svg viewBox="0 0 24 24" class="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h6"/></svg></a>
+</div>
+<table class="stack"><thead><tr><th>Type</th><th>Item</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">Bill</th><th class="n">Paid</th><th>Note</th><th></th></tr></thead><tbody>
+{% for r in g.rows %}
+<tr><td data-l="Type"><span class="pill {{r.type}}">{{r.type}}</span></td>
+<td data-l="Item"><b>{{r.item}}</b>{% if r.item_name and r.item_name != r.item %} · {{r.item_name}}{% endif %}</td>
+<td class="n" data-l="Qty">{{r.qty}}</td>
+<td class="n" data-l="Rate">{{r.rate}}</td>
+<td class="n" data-l="Bill">{% if r.bill %}₹{{'{:,.0f}'.format(r.bill)}}{% else %}—{% endif %}</td>
+<td class="n pos" data-l="Paid">{% if r.paid %}₹{{'{:,.0f}'.format(r.paid)}}{% else %}—{% endif %}</td>
+<td data-l="Note"><span class="mr">{{r.note}}</span></td>
+<td class="n"><a class="iconbtn sm" title="Edit or change date" href="/entry/{{r.row}}/edit">✎</a></td></tr>
+{% endfor %}</tbody></table>
+</div>
+{% endfor %}
+{% else %}
+<div class="card empty">No entries on {{sel_disp}}. Pick another date from the grid above, or <a href="/entry">add an entry</a>.</div>
+{% endif %}
+{% endblock %}

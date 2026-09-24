@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C1917">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>DipSeva · {% block title %}Overview{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,15 +17,16 @@
 <aside class="side">
 <div class="brand"><span class="mark">D</span><div><b>DipSeva</b><small>RENTAL SUITE</small></div></div>
 <nav>
-<a href="/" class="{{ 'on' if request.path=='/' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M3 13h8V3H3zM13 21h8v-8h-8zM13 3v6h8V3zM3 21h8v-6H3z"/></svg> Overview<kbd>1</kbd></a>
-<a href="/entry" class="{{ 'on' if request.path=='/entry' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg> New Entry<kbd>2</kbd></a>
-<a href="/customers" class="{{ 'on' if request.path.startswith('/customer') else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9"/></svg> Customers<kbd>3</kbd></a>
-<a href="/stock" class="{{ 'on' if request.path=='/stock' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg> Inventory<kbd>4</kbd></a>
+<a href="/" class="{{ 'on' if request.path=='/' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M3 13h8V3H3zM13 21h8v-8h-8zM13 3v6h8V3zM3 21h8v-6H3z"/></svg> <span>Overview</span><kbd>1</kbd></a>
+<a href="/entry" class="{{ 'on' if request.path=='/entry' or request.path.startswith('/entry/') else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg> <span>New Entry</span><kbd>2</kbd></a>
+<a href="/customers" class="{{ 'on' if request.path.startswith('/customer') else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9"/></svg> <span>Customers</span><kbd>3</kbd></a>
+<a href="/stock" class="{{ 'on' if request.path=='/stock' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg> <span>Inventory</span><kbd>4</kbd></a>
+<a href="/calendar" class="{{ 'on' if request.path=='/calendar' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg> <span>Calendar</span><kbd>5</kbd></a>
 </nav>
 <div class="side-foot">
 <div class="live"><span class="dot"></span> Ledger connected</div>
 <small>Dipseva_Ledger_NEW.xlsx</small>
-<small class="kbdhint">Alt + 1…4 to switch · / to search</small>
+<small class="kbdhint">Alt + 1…5 to switch · / to search</small>
 </div>
 </aside>
 <div class="main">

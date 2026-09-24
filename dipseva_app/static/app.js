@@ -72,9 +72,9 @@
     });
   }
 
-  /* 5. Keyboard: Alt+1..4 jump, / focus filter, Esc clear */
+  /* 5. Keyboard: Alt+1..5 jump, / focus filter, Esc clear */
   function keys() {
-    var map = { 1: '/', 2: '/entry', 3: '/customers', 4: '/stock' };
+    var map = { 1: '/', 2: '/entry', 3: '/customers', 4: '/stock', 5: '/calendar' };
     document.addEventListener('keydown', function (e) {
       if (e.altKey && map[e.key]) { e.preventDefault(); window.location.href = map[e.key]; return; }
       if (e.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) {
@@ -102,9 +102,9 @@
     });
   }
 
-  /* 7. Select contents on focus (money fields), keep tables readable on mobile */
+  /* 7. Select contents on focus so a typed amount replaces the old value (any device) */
   function polish() {
-    document.querySelectorAll('input[type=number]').forEach(function (i) {
+    document.querySelectorAll('input[type=number],input[inputmode=decimal],input[inputmode=numeric]').forEach(function (i) {
       i.addEventListener('focus', function () { i.select(); });
     });
     document.querySelectorAll('table').forEach(function (t) {

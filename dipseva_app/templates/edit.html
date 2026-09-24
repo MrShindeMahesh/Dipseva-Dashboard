@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Edit entry{% endblock %}
+{% block head %}Edit entry · row {{r.row}}{% endblock %}
+{% block sub %}Change the date, item, qty or amount — the sheet row updates in place{% endblock %}
+{% block actions %}
+<a class="btn ghost sm" href="/customer/{{r.customer|urlencode}}">Open statement</a>
+<a class="btn ghost sm" href="/calendar?d={{r.date}}">See that day</a>
+{% endblock %}
+{% block body %}
+<div class="card form-card">
+<div class="kpis" style="margin-bottom:16px">
+<div class="kpi"><small>Saved on</small><b>{{r.date_disp}}</b><span>row {{r.row}} of the sheet</span></div>
+<div class="kpi"><small>Type</small><b>{{r.type}}</b><span>{{r.item}} {{r.item_name}}</span></div>
+<div class="kpi"><small>Amount</small><b>₹{{'{:,.0f}'.format(r.bill or r.paid)}}</b><span>{% if r.paid %}paid ₹{{'{:,.0f}'.format(r.paid)}}{% else %}no money on this line{% endif %}</span></div>
+<div class="kpi"><small>Qty</small><b>{{r.qty}}</b><span>{% if r.mode %}mode {{r.mode}}{% else %}—{% endif %}</span></div>
+</div>
+<form method="post" autocomplete="off">
+<input type="hidden" name="row" value="{{r.row}}">
+<div class="frow2">
+<div class="field"><label>Date<input type="date" name="date" value="{{r.date}}" required></label></div>
+<div class="field"><label>Customer<input list="clist" name="customer" value="{{r.customer}}" required><datalist id="clist">{% for c in custs %}<option value="{{c.name}}">{{c.person}}</option>{% endfor %}</datalist></label></div>
+</div>
+<div class="frow3" style="margin-top:12px">
+<div class="field"><label>Type<select name="type" id="typ">{% for t in types %}<option {{'selected' if t==r.type else ''}}>{{t}}</option>{% endfor %}</select></label></div>
+<div class="field"><label>Item<input list="ilist" name="item" value="{{r.item}}" placeholder="Code"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}</option>{% endfor %}</datalist></label></div>
+<div class="field"><label>Qty<input inputmode="numeric" name="qty" value="{{r.qty}}" placeholder="0"></label></div>
+</div>
+<div class="frow3" style="margin-top:12px">
+<div class="field"><label>Rate<span class="money"><i>₹</i><input inputmode="decimal" name="rate" value="{{r.rate}}" placeholder="0"></span></label></div>
+<div class="field"><label>Amount<span class="money"><i>₹</i><input inputmode="decimal" name="amount" value="{{r.bill|round|int if r.bill else ''}}" placeholder="Qty × Rate"></span></label></div>
+<div class="field"><label>Paid<span class="money"><i>₹</i><input inputmode="decimal" name="paid" value="{{r.paid|round|int if r.paid else ''}}" placeholder="0"></span></label></div>
+</div>
+<div class="frow2" style="margin-top:12px">
+<div class="field"><label>Mode<select name="mode"><option value="">—</option>{% for m in modes %}<option {{'selected' if m==r.mode else ''}}>{{m}}</option>{% endfor %}</select></label></div>
+<div class="field"><label>Note <span class="mr">(मराठी चालेल)</span><input name="note" value="{{r.note}}"></label></div>
+</div>
+<div class="form-act">
+<button class="btn big" type="submit">Save changes to row {{r.row}}</button>
+<div class="savealt">
+<a class="btn ghost sm" href="/">Cancel</a>
+<span class="note">Amount wins over rate — type a lump sum and the rate is recalculated.</span>
+</div>
+</div>
+</form>
+</div>
+<div class="card" style="margin-top:14px">
+<h3>Delete this line</h3>
+<div class="sub">Use only when the entry was added by mistake. The sheet row is cleared but its Excel formulas stay.</div>
+<form method="post" action="/entry/{{r.row}}/delete" onsubmit="return confirm('Delete {{r.type}} line of {{r.customer}} ({{r.date_disp}})? This cannot be undone.');">
+<button class="btn red sm" type="submit">Delete row {{r.row}}</button>
+</form>
+</div>
+{% endblock %}

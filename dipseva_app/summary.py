@@ -60,3 +60,60 @@ def summarize(rows, items, custs, today=None):
         "khata": khata, "stock": stock, "low": low,
         "today_billed": tb, "today_paid": tp, "days": days,
         "due_count": sum(1 for e in khata if e["pending"] > 0)}
+
+
+def day_map(rows):
+    """iso date -> daily totals for the calendar grid."""
+    out = {}
+    for r in rows:
+        d = r.get("date")
+        if not d:
+            continue
+        e = out.setdefault(d, {"bill": 0.0, "paid": 0.0, "given": 0.0, "returned": 0.0, "custs": set(), "lines": 0})
+        e["bill"] += r["bill"]
+        e["paid"] += r["paid"]
+        e["lines"] += 1
+        if r.get("customer"):
+            e["custs"].add(r["customer"])
+        if r["type"] == "Issue":
+            e["given"] += r["qty"] or 0
+        elif r["type"] == "Return":
+            e["returned"] += r["qty"] or 0
+    for e in out.values():
+        e["custn"] = len(e["custs"])
+    return out
+
+
+def month_stats(rows, year, month):
+    """Totals for one calendar month."""
+    pre = "%04d-%02d" % (year, month)
+    pick = [r for r in rows if str(r.get("date", "")).startswith(pre)]
+    custs = {r["customer"] for r in pick if r.get("customer")}
+    days = {r["date"] for r in pick if r.get("date")}
+    return {"bill": sum(r["bill"] for r in pick), "paid": sum(r["paid"] for r in pick),
+        "given": sum(r["qty"] or 0 for r in pick if r["type"] == "Issue"),
+        "returned": sum(r["qty"] or 0 for r in pick if r["type"] == "Return"),
+        "custs": len(custs), "days": len(days), "lines": len(pick)}
+
+
+def day_groups(rows, iso):
+    """One day, grouped by customer — items below each customer, biggest bill first."""
+    g, order = {}, []
+    for r in rows:
+        if r.get("date") != iso:
+            continue
+        name = r.get("customer") or "—"
+        e = g.get(name)
+        if e is None:
+            e = g[name] = {"name": name, "rows": [], "bill": 0.0, "paid": 0.0, "given": 0.0, "returned": 0.0}
+            order.append(name)
+        e["rows"].append(r)
+        e["bill"] += r["bill"]
+        e["paid"] += r["paid"]
+        if r["type"] == "Issue":
+            e["given"] += r["qty"] or 0
+        elif r["type"] == "Return":
+            e["returned"] += r["qty"] or 0
+    out = [g[k] for k in order]
+    out.sort(key=lambda e: (-e["bill"], e["name"]))
+    return out

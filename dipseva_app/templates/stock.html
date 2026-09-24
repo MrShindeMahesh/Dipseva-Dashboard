@@ -21,20 +21,20 @@
 <a class="preset {{'on' if not request.args.get('low') else ''}}" href="/stock">All items</a>
 <a class="preset {{'on' if request.args.get('low') else ''}}" href="/stock?low=1">Only low stock</a>
 </div>
-<table id="stab"><thead><tr><th data-sort="text">Item</th>
+<table id="stab" class="stack"><thead><tr><th data-sort="text">Item</th>
 <th class="n" data-sort="num">Opening</th><th class="n" data-sort="num">Given</th><th class="n" data-sort="num">Back</th>
 <th class="n" data-sort="num">In hand</th><th class="n" data-sort="num">Min</th>
 <th data-sort="num">Stock health</th><th class="n" data-sort="num">Revenue</th><th data-sort="text">Status</th><th></th></tr></thead><tbody>
 {% for e in rows %}{% if not request.args.get('low') or e.status=='LOW' %}
 <tr data-href="/entry?item={{e.id|urlencode}}&type=Issue">
-<td><b>{{e.id}}</b> · {{e.name}}{% if e.marathi %} <span class="mr">· {{e.marathi}}</span>{% endif %}</td>
-<td class="n" data-v="{{e.opening}}">{{e.opening}}</td><td class="n" data-v="{{e.given}}">{{e.given}}</td><td class="n" data-v="{{e.returned}}">{{e.returned}}</td>
-<td class="n {{'neg' if e.status=='LOW' else ''}}" data-v="{{e.inhand}}"><b>{{e.inhand}}</b></td>
-<td class="n" data-v="{{e.min}}">{{e.min}}</td>
-<td data-v="{{e.health}}"><div class="meter {{'low' if e.status=='LOW' else ''}}"><i style="width:{{e.health|round|int}}%"></i></div></td>
-<td class="n" data-v="{{e.revenue}}">{{"{:,.0f}".format(e.revenue)}}</td>
-<td><span class="badge {{e.status}}">{{e.status}}</span></td>
-<td class="n"><a class="iconbtn" title="Issue this item" href="/entry?item={{e.id|urlencode}}&type=Issue"><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg></a></td></tr>
+<td data-l="Item"><b>{{e.id}}</b> · {{e.name}}{% if e.marathi %} <span class="mr">· {{e.marathi}}</span>{% endif %}</td>
+<td class="n" data-l="Opening" data-v="{{e.opening}}">{{e.opening}}</td><td class="n" data-l="Given" data-v="{{e.given}}">{{e.given}}</td><td class="n" data-l="Back" data-v="{{e.returned}}">{{e.returned}}</td>
+<td class="n {{'neg' if e.status=='LOW' else ''}}" data-l="In hand" data-v="{{e.inhand}}"><b>{{e.inhand}}</b></td>
+<td class="n" data-l="Min" data-v="{{e.min}}">{{e.min}}</td>
+<td data-l="Stock health" data-v="{{e.health}}"><div class="meter {{'low' if e.status=='LOW' else ''}}"><i style="width:{{e.health|round|int}}%"></i></div></td>
+<td class="n" data-l="Revenue" data-v="{{e.revenue}}">₹{{"{:,.0f}".format(e.revenue)}}</td>
+<td data-l="Status"><span class="badge {{e.status}}">{{e.status}}</span></td>
+<td class="n act"><a class="iconbtn" title="Issue this item" href="/entry?item={{e.id|urlencode}}&type=Issue"><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg></a></td></tr>
 {% endif %}{% endfor %}</tbody></table>
 <div class="empty" data-empty="#stab" hidden>No item matches that search.</div>
 <div class="note">In hand = Opening + Returned − Given. Status turns LOW when in hand drops below the minimum level.</div>

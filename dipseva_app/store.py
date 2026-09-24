@@ -1,11 +1,38 @@
 """Workbook IO + summaries for Dipseva."""
 import os
+import re
 from datetime import datetime, date, timedelta
 import openpyxl
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 XLSX = os.path.join(BASE, "Dipseva_Ledger_NEW.xlsx")
+LEDGER_FIRST, LEDGER_LAST = 3, 1002
+DATE_FMT, MONEY_FMT = "DD-MMM-YYYY", "#,##0"
+MODES = ["Cash", "UPI", "PhonePe SK", "Paytm SK", "PhonePe VK", "PAYTM B QR", "Bank"]
+TYPES = ["Issue", "Return", "Payment"]
+
+
 def load_wb():
     return openpyxl.load_workbook(XLSX)
+
+
+def money(v, default=0.0):
+    """Tolerant money/qty parser — accepts ₹1150, '1,150', '1 150.50', '-', ''. Never raises."""
+    if v is None or isinstance(v, bool):
+        return default
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = str(v).strip().replace("₹", "")
+    s = s.replace("Rs.", "").replace("Rs", "").replace("INR", "").replace(" ", "")
+    s = s.replace(",", "").replace("_", "")
+    if s in ("", "-", "--", "."):
+        return default
+    try:
+        return float(s)
+    except Exception:
+        hit = re.findall(r"-?\d+(?:\.\d+)?", s)
+        return float(hit[0]) if hit else default
+
+
 def parse_date(v):
     if v is None or v == "":
         return None
@@ -22,6 +49,58 @@ def parse_date(v):
         return datetime.fromisoformat(str(v)).date()
     except Exception:
         return None
+def row_excel(r):
+    """Excel formulas every Ledger row keeps (Item name lookup, rate lookup, bill)."""
+    return {
+        5: f'=IF($D{r}="","",IFERROR(XLOOKUP($D{r},Items!$A:$A,Items!$B:$B),"ERR"))',
+        7: f'=IF($D{r}="","",IFERROR(XLOOKUP($D{r},Items!$A:$A,Items!$D:$D),0))',
+        8: f'=IF($C{r}="Issue",IFERROR($F{r}*$G{r},0),0)',
+    }
+
+
+def next_free_row(ws):
+    """First empty Ledger row (A+B+C all blank), or None when the sheet is full."""
+    r = LEDGER_FIRST
+    while r <= LEDGER_LAST:
+        if all(ws.cell(r, c).value in (None, "") for c in (1, 2, 3)):
+            return r
+        r += 1
+    return None
+
+
+def write_line(ws, r, dt, cust, typ, item="", qty=0, rate=0, paid=0, mode="", note=""):
+    """Write one ledger line. Item lines keep qty/rate + Excel formulas; Payment keeps paid."""
+    for c in range(1, 12):
+        ws.cell(r, c).value = None
+    ws.cell(r, 1).value = dt
+    ws.cell(r, 1).number_format = DATE_FMT
+    ws.cell(r, 2).value = cust
+    ws.cell(r, 3).value = typ
+    if typ in ("Issue", "Return"):
+        f = row_excel(r)
+        ws.cell(r, 4).value = item
+        ws.cell(r, 5).value = f[5]
+        ws.cell(r, 6).value = qty or None
+        ws.cell(r, 6).number_format = "#,##0"
+        ws.cell(r, 7).value = rate if rate else f[7]
+        ws.cell(r, 7).number_format = MONEY_FMT
+        ws.cell(r, 8).value = f[8]
+        ws.cell(r, 8).number_format = MONEY_FMT
+    ws.cell(r, 9).value = paid or None
+    ws.cell(r, 9).number_format = MONEY_FMT
+    ws.cell(r, 10).value = (mode or "Cash") if paid else (mode or None)
+    ws.cell(r, 11).value = note or None
+    return r
+
+
+def clear_row(ws, r):
+    """Blank a ledger row but keep the Excel formulas so the sheet still works by hand."""
+    for c in range(1, 12):
+        ws.cell(r, c).value = None
+    for c, f in row_excel(r).items():
+        ws.cell(r, c).value = f
+
+
 def read_ledger():
     wb = load_wb()
     ws = wb["Ledger"]

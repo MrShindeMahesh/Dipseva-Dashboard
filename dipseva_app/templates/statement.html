@@ -39,19 +39,25 @@
 <button class="btn ghost sm" type="button" onclick="window.print()">Print / PDF</button>
 {% if wa_url %}<a class="btn ghost sm" href="{{wa_url}}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
 </div>
-<table id="ltab"><thead><tr><th data-sort="text">Date</th><th data-sort="text">Type</th><th data-sort="text">Item</th>
+<table id="ltab" class="stack"><thead><tr><th data-sort="text">Date</th><th data-sort="text">Type</th><th data-sort="text">Item</th>
 <th class="n" data-sort="num">Qty</th><th class="n" data-sort="num">Rate</th><th class="n" data-sort="num">Bill</th>
-<th class="n" data-sort="num">Paid</th><th class="n" data-sort="num">Balance</th><th>Mode</th><th>Note</th></tr></thead><tbody>
+<th class="n" data-sort="num">Paid</th><th class="n" data-sort="num">Balance</th><th>Mode</th><th>Note</th><th></th></tr></thead><tbody>
 {% for r in rows %}
-<tr><td>{{r.date_disp}}</td><td><span class="pill {{r.type}}">{{r.type}}</span></td>
-<td>{{r.item}}{% if r.item_name and r.item_name != r.item %} {{r.item_name}}{% endif %}</td>
-<td class="n">{{r.qty}}</td><td class="n" data-v="{{r.rate}}">{{r.rate}}</td>
-<td class="n" data-v="{{r.bill}}">{{'{:,.0f}'.format(r.bill)}}</td>
-<td class="n pos" data-v="{{r.paid}}">{{'{:,.0f}'.format(r.paid)}}</td>
-<td class="n" data-v="{{bals[loop.index0]}}"><b>{{'{:,.0f}'.format(bals[loop.index0])}}</b></td>
-<td>{{r.mode}}</td><td><span class="mr">{{r.note}}</span></td></tr>
+<tr id="row{{r.row}}">
+<td data-l="Date">{{r.date_disp}}</td>
+<td data-l="Type"><span class="pill {{r.type}}">{{r.type}}</span></td>
+<td data-l="Item">{{r.item}}{% if r.item_name and r.item_name != r.item %} {{r.item_name}}{% endif %}</td>
+<td class="n" data-l="Qty">{{r.qty}}</td>
+<td class="n" data-l="Rate" data-v="{{r.rate}}">₹{{r.rate}}</td>
+<td class="n" data-l="Bill" data-v="{{r.bill}}">₹{{'{:,.0f}'.format(r.bill)}}</td>
+<td class="n pos" data-l="Paid" data-v="{{r.paid}}">₹{{'{:,.0f}'.format(r.paid)}}</td>
+<td class="n" data-l="Balance" data-v="{{bals[loop.index0]}}"><b>₹{{'{:,.0f}'.format(bals[loop.index0])}}</b></td>
+<td data-l="Mode">{{r.mode}}</td>
+<td data-l="Note"><span class="mr">{{r.note}}</span></td>
+<td class="n"><a class="iconbtn sm no-print" title="Edit this line — date, qty, amount" href="/entry/{{r.row}}/edit">✎</a></td></tr>
 {% endfor %}</tbody></table>
 <div class="empty" data-empty="#ltab" hidden>Nothing matches that filter.</div>
+<div class="note">Row numbers match the Excel ledger. Tap ✎ to change the date, qty or amount of a saved line.</div>
 </div>
 <div class="card" style="margin-top:14px">
 <h3>Share text</h3><div class="sub">Paste into WhatsApp or SMS — no dashes, plain words</div>

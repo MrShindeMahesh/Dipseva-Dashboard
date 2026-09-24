@@ -31,24 +31,32 @@ python3 app.py
 ```
 
 ## Pages
-- `/` Home — business-date presets, 4 KPIs, top receivables (click row → statement, ₹ icon → record payment), 10-day collections, recent activity, low stock
-- `/entry` — type cards (Issue / Return / Payment) that reshape the form, quick item chips, qty stepper, live summary, optional "keep form open"
+- `/` Home — business-date presets, 4 KPIs, top receivables (click row → statement, ₹ icon → record payment), 10-day collections (row → that day in the calendar), recent activity with ✎ edit, low stock
+- `/entry` — pick customer + date once, then add many **item lines** in one save; each line has its own **Give ↑ / Take ↓** toggle, qty stepper, rate *and* a typeable **Amount ₹** (amount wins; rate is recalculated). Paid / Mode / Note are shared. Buttons: *Save*, *Save & open statement*, *Keep form open*, plus a “last entries of this customer” list with ✎ edit
 - `/customers` — KPIs + instant search + sortable columns + pending-% meter + row actions
-- `/customer/<name>` — statement with running balance, collect-payment panel, WhatsApp reminder, per-customer phone save, print/PDF
+- `/customer/<name>` — statement with running balance, collect-payment panel, WhatsApp reminder, per-customer phone save, print/PDF, ✎ edit on every ledger row
 - `/stock` — low-stock KPIs, health meters, status badges, filter + only-low toggle
+- `/calendar` — month grid (bill ₹, customer count, ↑ given / ↓ returned per day); tapping a date lists **each customer of that day with the stock lines below** (qty, rate, bill, paid, note, ✎ edit) + “+ Entry on this date”
+- `/entry/<row>/edit` — change a saved line: date, customer, type, item, qty, rate, amount, paid, mode, note (+ safe delete). Row number = Excel row
 - `/api/summary` — JSON
 
 ## UI / UX
 - Warm Ivory theme: ivory `#FAF7F0` bg, white cards, deep navy `#1E2A5A`, maroon accent, serif headings — no gradients/neon
+- Money is always **₹** (KPI, tables, share text, and the rupee icon on “record payment” buttons). Amount boxes are free text: `1150`, `1,150`, `₹1,150`, `Rs 1150` all parse
 - Toasts for save/error feedback, clickable rows, sortable + sticky table headers, live filters (`/` to focus, `Esc` to clear)
-- Keyboard: `Alt+1` overview, `Alt+2` entry, `Alt+3` customers, `Alt+4` inventory
-- Prefill deep links: `/entry?customer=X&type=Payment&amount=Y`, `/entry?item=CH&type=Issue`
+- Keyboard: `Alt+1` overview, `Alt+2` entry, `Alt+3` customers, `Alt+4` inventory, `Alt+5` calendar
+- Prefill deep links: `/entry?customer=X&type=Payment&amount=Y`, `/entry?item=CH&type=Issue`, `/entry?date=2026-07-05`
+- Layout fills the screen (no 1180px cap) — wide monitors use the full width
+- Mobile (performance-first, CSS only — no extra JS libraries): tables become labelled cards, 44px touch targets, 16px inputs (no iOS zoom), sticky save bar, compact calendar, toasts at the bottom
 - Print stylesheet on the statement (sidebar/actions hidden on paper)
 - Fonts: Inter + Mukta (Marathi names/notes)
 - Sheet tab colours match web cards
 
 ## Note
 - Entry only from the app. Sheet is backup if issue happens.
+- Multiple item lines in one save = one Excel row per line (same date/customer/note); Paid/Mode land on the first line only.
+- Changing a row’s date later is expected: every ledger row is editable from the statement, dashboard, calendar or the entry page (`✎`).
 - Old file `Ledger JULY 2026.xlsx` is reference only, not used by app.
 - This repo includes `*.xlsx` with customer data. Make PRIVATE if you add real phones.
 - openpyxl gotcha: `ws.cell(r, c, None)` does **not** blank a cell — it ignores `None`. Use `ws.cell(r, c).value = None`.
+- `$` inside Ledger formulas (`$D3`, `$F3`) is Excel’s **absolute reference**, not currency — leave it alone.

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}New Entry{% endblock %}
 {% block head %}New Entry{% endblock %}
-{% block sub %}Type first — the form changes to match{% endblock %}
+{% block sub %}Pick the customer once, then add as many items as you gave or got back{% endblock %}
 {% block actions %}<a class="btn ghost sm" href="/">Back to overview</a>{% endblock %}
 {% block body %}
 <form method="post" id="f" autocomplete="off">
@@ -14,84 +14,190 @@
 <div class="entry-grid">
 <div class="card form-card">
 <div class="frow2">
-<div class="field"><label>Date<input type="date" name="date" value="{{today}}" required></label></div>
+<div class="field"><label>Date<input type="date" name="date" value="{{pre.date or today}}" required></label></div>
 <div class="field"><label>Customer<input list="clist" name="customer" id="cust" value="{{pre.customer}}" required placeholder="Start typing name…"><datalist id="clist">{% for c in custs %}<option value="{{c.name}}">{{c.person}}{% if c.phone %} · {{c.phone}}{% endif %}</option>{% endfor %}</datalist></label></div>
 </div>
 <div id="itemBlock">
-<div class="field"><label>Item<input list="ilist" name="item" id="item" value="{{pre.item}}" placeholder="Code or name…"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}{% if i.marathi %} · {{i.marathi}}{% endif %}</option>{% endfor %}</datalist></label></div>
-<div class="chips" id="chips">{% for i in items[:12] %}<button type="button" class="chip" data-id="{{i.id}}" title="{{i.name}} · ₹{{i.rate}}">{{i.id}}</button>{% endfor %}</div>
+<div class="blockhead"><b>Items on this entry</b><span class="note" id="lineCount">1 line</span></div>
+<div id="lines"></div>
+<div class="lineadd">
+<button type="button" class="btn ghost sm" id="addLine">+ Add another item</button>
+<span class="note">One entry can hold many items — mix Give and Take in the same save.</span>
+</div>
+<div class="chips" id="chips">{% for i in items[:12] %}<button type="button" class="chip" data-id="{{i.id}}" data-rate="{{i.rate or 0}}" title="{{i.name}} · ₹{{i.rate}}">+ {{i.id}}</button>{% endfor %}</div>
+<datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}{% if i.marathi %} · {{i.marathi}}{% endif %}</option>{% endfor %}</datalist>
+</div>
 <div class="frow3">
-<div class="field"><label>Qty<div class="stepper"><button type="button" id="qm" tabindex="-1">−</button><input type="number" name="qty" id="qty" step="any" value="1" min="0"><button type="button" id="qp" tabindex="-1">+</button></div></label></div>
-<div class="field"><label>Rate ₹<input type="number" name="rate" id="rate" step="any" placeholder="Auto from item"></label></div>
-<div class="field"><label>Paid now ₹<input type="number" name="paid" id="paid" step="any" value="{{pre.amount if pre.type=='Payment' else '0'}}" min="0"></label></div>
-</div>
-</div>
-<div class="frow2">
-<div class="field"><label>Mode<select name="mode"><option>Cash</option><option>UPI</option><option>PhonePe SK</option><option>Paytm SK</option><option>PhonePe VK</option><option>PAYTM B QR</option><option>Bank</option></select></label></div>
+<div class="field"><label id="paidLbl">Paid now (जमा)<span class="money"><i>₹</i><input inputmode="decimal" name="paid" id="paid" value="{{pre.amount}}" placeholder="0" autocomplete="off"></span></label></div>
+<div class="field"><label>Mode<select name="mode">{% for m in modes %}<option>{{m}}</option>{% endfor %}</select></label></div>
 <div class="field"><label>Note <span class="mr">(मराठी चालेल)</span><input name="note" placeholder="e.g. wedding, 2 days"></label></div>
 </div>
 <div id="fullDue"></div>
 <div class="form-act">
-<button class="btn big" type="submit" id="saveBtn">Save Issue entry</button>
-<label class="check" style="margin-top:10px"><input type="checkbox" name="again" value="1"> Keep form open for the next entry</label>
+<button class="btn big" type="submit" id="saveBtn">Save entry</button>
+<div class="savealt">
+<label class="check"><input type="checkbox" name="again" value="1"> Keep form open for the next entry</label>
+<button class="btn ghost sm" type="submit" name="after" value="statement">Save &amp; open statement</button>
+</div>
 </div>
 </div>
 <aside class="card summary">
 <h3>Summary</h3>
-<div class="sumrow"><span>Item</span><b id="sItem">—</b></div>
 <div class="sumrow"><span>Customer</span><b id="sCust">—</b></div>
-<div class="sumrow"><span>Qty × Rate</span><b id="sCalc">—</b></div>
+<div class="sumrow"><span>Item lines</span><b id="sLines">0</b></div>
+<div class="sumrow"><span>Giving / Taking</span><b id="sCalc">—</b></div>
 <div class="total"><span id="sLbl">Bill amount</span><b id="bill">₹0</b></div>
 <div class="hint" id="hint">Bill = Qty × Rate. Paid is adjusted in khata.</div>
-<div class="note">Shortcuts: <b>Alt+2</b> this page · <b>Alt+1</b> overview · Enter in Customer jumps to Item.</div>
+<ul class="minilist" id="mini"></ul>
+{% if erows %}
+<div class="recent">
+<b>Last entries · {{pre.customer}}</b>
+<ul class="minilist">
+{% for r in erows %}<li><span class="pill {{r.type}}">{{r.type}}</span> <span>{{r.date_disp}}</span>
+<span class="grow">{{r.item}}{% if r.qty %} × {{r.qty}}{% endif %}</span>
+{% if r.paid %}<b class="pos">₹{{'{:,.0f}'.format(r.paid)}}</b>{% elif r.bill %}<b>₹{{'{:,.0f}'.format(r.bill)}}</b>{% endif %}
+<a class="iconbtn sm" title="Edit this line" href="/entry/{{r.row}}/edit">✎</a></li>{% endfor %}
+</ul>
+</div>
+{% endif %}
+<div class="note">Shortcuts: <b>Alt+2</b> this page · <b>Alt+5</b> calendar · Enter in Customer jumps to the first item.</div>
 </aside>
 </div>
 </form>
+<template id="lineTpl">
+<div class="line" data-line>
+<div class="seg" role="group" aria-label="Given or taken">
+<button type="button" class="sg on" data-t="Issue" title="Goods given">Give ↑</button>
+<button type="button" class="sg" data-t="Return" title="Goods came back">Take ↓</button>
+</div>
+<input type="hidden" name="l_type" value="Issue">
+<label class="grow">Item<input list="ilist" name="l_item" placeholder="Code or name…" autocomplete="off"></label>
+<label class="q">Qty<span class="stepper"><button type="button" data-step="-1" tabindex="-1">−</button><input inputmode="numeric" name="l_qty" value="1"><button type="button" data-step="1" tabindex="-1">+</button></span></label>
+<label class="r">Rate<span class="money"><i>₹</i><input inputmode="decimal" name="l_rate" placeholder="auto" autocomplete="off"></span></label>
+<label class="a">Amount<span class="money"><i>₹</i><input inputmode="decimal" name="l_amount" placeholder="0" autocomplete="off"></span></label>
+<button type="button" class="iconbtn del" data-del title="Remove this line"><svg viewBox="0 0 24 24" class="ic"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+</div>
+</template>
 <script>
 const rates={}, names={};
-{% for i in items %}rates["{{i.id}}"]={{i.rate or 0}}; names["{{i.id}}"]="{{i.name}}";{% endfor %}
-const typ=document.getElementById('typ'), item=document.getElementById('item'),
-rate=document.getElementById('rate'), qty=document.getElementById('qty'),
-paid=document.getElementById('paid'), cust=document.getElementById('cust'),
-bill=document.getElementById('bill'), sItem=document.getElementById('sItem'),
+{% for i in items %}rates["{{i.id}}"]={{i.rate or 0}}; names["{{i.id}}"]={{ i.name|tojson }};{% endfor %}
+const typ=document.getElementById('typ'), cust=document.getElementById('cust'),
+paid=document.getElementById('paid'), bill=document.getElementById('bill'),
 sCust=document.getElementById('sCust'), sCalc=document.getElementById('sCalc'),
-hint=document.getElementById('hint'), sLbl=document.getElementById('sLbl'),
-saveBtn=document.getElementById('saveBtn'), itemBlock=document.getElementById('itemBlock'),
-fullDue=document.getElementById('fullDue');
-let cur=typ.value || 'Issue';
+sLines=document.getElementById('sLines'), hint=document.getElementById('hint'),
+sLbl=document.getElementById('sLbl'), saveBtn=document.getElementById('saveBtn'),
+itemBlock=document.getElementById('itemBlock'), fullDue=document.getElementById('fullDue'),
+lines=document.getElementById('lines'), mini=document.getElementById('mini'),
+tpl=document.getElementById('lineTpl'), lineCount=document.getElementById('lineCount'),
+paidLbl=document.getElementById('paidLbl');
+let cur=typ.value||'Issue';
+function num(v){const m=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const f=parseFloat(m);return isNaN(f)?0:f;}
+function inr(v){return '₹'+Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:0});}
+function setLineType(node,t){
+node.querySelector('[name=l_type]').value=t;
+node.querySelectorAll('.sg').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
+function addLine(item,type,qty,rate,amt,focus){
+const node=tpl.content.firstElementChild.cloneNode(true);
+const g=s=>node.querySelector('[name='+s+']');
+if(item)g('l_item').value=item;
+if(rate)g('l_rate').value=rate;
+if(qty)g('l_qty').value=qty;
+if(amt)g('l_amount').value=amt;
+setLineType(node,type||'Issue');
+lines.appendChild(node);
+if(focus)g('l_qty').focus();
+upd(); return node;}
+function lineData(node){
+const g=s=>node.querySelector('[name='+s+']').value;
+return {t:g('l_type'),item:g('l_item').trim(),qty:num(g('l_qty')),rate:num(g('l_rate')),amt:num(g('l_amount'))};}
+function upd(){
+const rows=[...lines.querySelectorAll('.line')];
+let billTot=0,give=0,take=0,active=0,qsum=0;
+mini.innerHTML='';
+rows.forEach(node=>{
+const rEl=node.querySelector('[name=l_rate]');
+const d=lineData(node);
+if(d.item&&!rEl.value&&rates[d.item]){rEl.value=rates[d.item];d.rate=rates[d.item];}
+const amount=(d.t==='Issue')?(d.amt||d.qty*d.rate):0;
+if(d.item&&(d.qty||d.rate)){
+active++;qsum+=d.qty;
+if(d.t==='Issue'){billTot+=amount;give+=d.qty;}else{take+=d.qty;}
+const li=document.createElement('li');
+li.innerHTML='<span class="pill '+d.t+'">'+(d.t==='Issue'?'Give':'Take')+'</span> <span class="grow">'+d.item+
+(d.qty?' × '+d.qty:'')+(names[d.item]?' <small>'+names[d.item]+'</small>':'')+'</span><b>'+(d.t==='Issue'?inr(amount):'—')+'</b>';
+mini.appendChild(li);}
+const del=node.querySelector('[data-del]');
+if(del)del.hidden=(rows.length<2);
+});
+sCust.textContent=cust.value||'—';
+sLines.textContent=active;
+lineCount.textContent=active+' line'+(active===1?'':'s');
+const p=num(paid.value);
+if(cur==='Payment'){
+bill.textContent=inr(p); sLbl.textContent='Amount received';
+sCalc.textContent='Cash in '+inr(p);
+fullDue.innerHTML='<div class="quickpay"><button type="button" class="qp" data-add="500">+ ₹500</button><button type="button" class="qp" data-add="1000">+ ₹1,000</button><button type="button" class="qp" data-add="2000">+ ₹2,000</button><button type="button" class="qp" data-clear="1">Clear</button></div>';
+}else{
+bill.textContent=inr(billTot); sLbl.textContent='Bill amount';
+sCalc.textContent='Giving '+give+' · Taking '+take;
+fullDue.innerHTML='';}
+}
 function setType(t){
 cur=t; typ.value=t;
-if(t==='Payment'){itemBlock.style.display='none'; item.value='';}
-else{itemBlock.style.display='';}
-document.querySelectorAll('.step').forEach(x=>x.classList.toggle('on', x.dataset.t===t));
-saveBtn.textContent='Save '+t+' entry';
-sLbl.textContent=(t==='Payment')?'Payment amount':'Bill amount';
-hint.textContent=(t==='Issue')?'Bill = Qty × Rate. Paid is adjusted in khata.':(t==='Return')?'Only qty matters — bill stays ₹0.':'Only money matters — item not needed.';
+itemBlock.style.display=(t==='Payment')?'none':'';
+document.querySelectorAll('.step').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+saveBtn.textContent='Save '+(t==='Payment'?'payment':(t==='Return'?'return':'issue'))+' entry';
+paidLbl.childNodes[0].nodeValue=(t==='Payment')?'Amount received (जमा)':(t==='Return'?'Cash refunded (परत दिले)':'Paid now (जमा)');
+hint.textContent=(t==='Issue')?'Bill = Qty × Rate. Paid is adjusted in khata.':(t==='Return')?'Only qty matters — bill stays ₹0. Paid = refund handed back.':'Only money matters — items not needed.';
+if(t!=='Payment'){
+if(!lines.children.length)addLine('');
+lines.querySelectorAll('.line').forEach(nd=>{if(!nd.dataset.touched)setLineType(nd,t);});}
 upd();}
 document.querySelectorAll('.step').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.t)));
-document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{item.value=c.dataset.id; upd(); item.focus();}));
-document.getElementById('qm').addEventListener('click',()=>{qty.value=Math.max(0,parseFloat(qty.value||0)-1);upd();});
-document.getElementById('qp').addEventListener('click',()=>{qty.value=parseFloat(qty.value||0)+1;upd();});
-function inr(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});}
-function upd(){
-if(!rate.value && rates[item.value]) rate.value=rates[item.value];
-let r=parseFloat(rate.value||rates[item.value]||0), q=parseFloat(qty.value||0), p=parseFloat(paid.value||0);
-let b=(cur==='Issue')?q*r:0;
-bill.textContent=(cur==='Payment')?inr(p):inr(b);
-sItem.textContent=item.value?((item.value+' · '+(names[item.value]||''))):'—';
-sCust.textContent=cust.value||'—';
-sCalc.textContent=(cur==='Payment')?('Paid '+inr(p)):((q||0)+' × ₹'+(r||0));
-if(cur==='Payment'){fullDue.innerHTML='<div class="quickpay"><button type="button" class="qp" data-add="500">+ ₹500</button><button type="button" class="qp" data-add="1000">+ ₹1,000</button><button type="button" class="qp" data-add="2000">+ ₹2,000</button><button type="button" class="qp" data-clear="1">Clear</button></div>';}
-else{fullDue.innerHTML='';}
-}
+lines.addEventListener('click',e=>{
+const del=e.target.closest('[data-del]');
+if(del){const node=del.closest('.line');if(lines.children.length>1){node.remove();upd();}return;}
+const sg=e.target.closest('.sg');
+if(sg){const node=sg.closest('.line');node.dataset.touched='1';setLineType(node,sg.dataset.t);upd();return;}
+const st=e.target.closest('[data-step]');
+if(st){const node=st.closest('.line'),box=node.querySelector('[name=l_qty]');
+box.value=Math.max(0,num(box.value)+Number(st.dataset.step));upd();return;}});
+lines.addEventListener('input',e=>{
+const node=e.target.closest('.line'); if(!node) return;
+if(e.target.name==='l_item')node.dataset.touched='1';
+if(e.target.name==='l_amount'){const d=lineData(node);
+if(d.qty>0)node.querySelector('[name=l_rate]').value=Math.round(d.amt/d.qty*100)/100;}
+if(e.target.name==='l_qty'||e.target.name==='l_rate'){const d=lineData(node);
+const r=d.rate||rates[d.item]||0;
+if(d.qty>0&&r)node.querySelector('[name=l_amount]').value=Math.round(d.qty*r*100)/100;}
+upd();});
+document.getElementById('addLine').addEventListener('click',()=>addLine('',cur==='Return'?'Return':'Issue','1','','',true));
+document.getElementById('chips').addEventListener('click',e=>{
+const c=e.target.closest('.chip'); if(!c) return;
+const free=[...lines.querySelectorAll('.line')].find(nd=>!nd.querySelector('[name=l_item]').value.trim());
+const node=free||addLine('',cur==='Return'?'Return':'Issue','1','','',false);
+node.querySelector('[name=l_item]').value=c.dataset.id;
+node.querySelector('[name=l_rate]').value=c.dataset.rate||rates[c.dataset.id]||0;
+const q=node.querySelector('[name=l_qty]'); if(!num(q.value))q.value=1;
+node.dataset.touched='1'; q.focus(); upd();});
 fullDue.addEventListener('click',e=>{
 const b=e.target.closest('.qp'); if(!b) return;
-paid.value = b.dataset.clear ? 0 : Math.max(0, parseFloat(paid.value||0) + parseFloat(b.dataset.add));
+paid.value=b.dataset.clear?0:(num(paid.value)+parseFloat(b.dataset.add));
 upd(); paid.focus();});
-[item,rate,qty,paid].forEach(e=>e.addEventListener('input',upd));
+paid.addEventListener('input',upd);
 cust.addEventListener('input',upd);
-cust.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); if(cur!=='Payment') item.focus(); else paid.focus();}});
+cust.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();
+if(cur!=='Payment'){const f=lines.querySelector('[name=l_item]');if(f)f.focus();else addLine('',cur,'1','','',true);}
+else paid.focus();}});
+lines.addEventListener('keydown',e=>{
+if(e.key==='Enter'&&e.target.name==='l_item'){e.preventDefault();
+const q=e.target.closest('.line').querySelector('[name=l_qty]');q.focus();q.select();}});
+const preItem='{{pre.item}}';
 setType(cur);
-if(!cust.value) cust.focus();
+if(!cur||cur==='Payment'){if(!lines.children.length)addLine('');}
+else if(!lines.children.length)addLine('');
+if(preItem&&cur!=='Payment'){lines.querySelector('[name=l_item]').value=preItem;}
+if(!cust.value)cust.focus();
+upd();
 </script>
 {% endblock %}
