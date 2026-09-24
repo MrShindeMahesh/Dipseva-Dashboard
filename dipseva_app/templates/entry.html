@@ -19,7 +19,7 @@
 </div>
 <div id="itemBlock">
 <div class="field"><label>Item<input list="ilist" name="item" id="item" placeholder="Code or name…" autocomplete="off"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}{% if i.marathi %} · {{i.marathi}}{% endif %}</option>{% endfor %}</datalist></label></div>
-<div class="chips" id="chips">{% for i in items[:12] %}<button type="button" class="chip" data-id="{{i.id}}">{{i.id}}</button>{% endfor %}</div>
+<div class="chips" id="chips">{% for i in items[:12] %}<button type="button" class="chip" data-id="{{i.id}}" title="{{i.name}} · ₹{{i.rate}}">{{i.id}}</button>{% endfor %}</div>
 <div class="frow3">
 <div class="field"><label>Qty<div class="stepper"><button type="button" id="qm">−</button><input type="number" name="qty" id="qty" step="any" value="1" min="0"><button type="button" id="qp">+</button></div></label></div>
 <div class="field"><label>Rate ₹<input type="number" name="rate" id="rate" step="any" placeholder="Auto"></label></div>

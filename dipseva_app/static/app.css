@@ -92,7 +92,7 @@ footer{color:var(--faint);font-size:12px;padding:24px 4px}
 .form-card{padding:20px}
 .frow2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
-@media(max-width:700px){.frow2,.frow3{grid-template-columns:1fr}}
+@media(max-width:700px){.frow2,.frow3{grid-template-columns:1fr}.steps{grid-template-columns:1fr}}
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 2px}
 .chip{background:#FDFBF6;border:1px solid var(--line);border-radius:20px;padding:6px 13px;
  font-size:12px;font-weight:600;cursor:pointer;color:var(--ink)}
