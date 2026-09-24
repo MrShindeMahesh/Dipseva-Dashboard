@@ -1,36 +1,40 @@
 {% extends "base.html" %}
 {% block title %}New Entry{% endblock %}
 {% block head %}New Entry{% endblock %}
-{% block sub %}What happened today — goods or money{% endblock %}
-{% block actions %}<a class="btn ghost" href="/">Back</a>{% endblock %}
+{% block sub %}Type first — the form changes to match{% endblock %}
+{% block actions %}<a class="btn ghost sm" href="/">Back to overview</a>{% endblock %}
 {% block body %}
-<form method="post" id="f">
+<form method="post" id="f" autocomplete="off">
 <div class="steps">
-<button type="button" class="step on" data-t="Issue"><b>1 · Issue</b><span>Goods given on rent</span></button>
-<button type="button" class="step" data-t="Return"><b>2 · Return</b><span>Goods came back</span></button>
-<button type="button" class="step" data-t="Payment"><b>3 · Payment</b><span>Money received</span></button>
+<button type="button" class="step {{'on' if pre.type=='Issue' else ''}}" data-t="Issue"><b>1 · Issue</b><span>Goods given on rent</span></button>
+<button type="button" class="step {{'on' if pre.type=='Return' else ''}}" data-t="Return"><b>2 · Return</b><span>Goods came back</span></button>
+<button type="button" class="step {{'on' if pre.type=='Payment' else ''}}" data-t="Payment"><b>3 · Payment</b><span>Money received</span></button>
 </div>
-<input type="hidden" name="type" id="typ" value="Issue">
+<input type="hidden" name="type" id="typ" value="{{pre.type}}">
 <div class="entry-grid">
 <div class="card form-card">
 <div class="frow2">
 <div class="field"><label>Date<input type="date" name="date" value="{{today}}" required></label></div>
-<div class="field"><label>Customer<input list="clist" name="customer" id="cust" required placeholder="Start typing name…" autocomplete="off"><datalist id="clist">{% for c in custs %}<option value="{{c.name}}">{% endfor %}</datalist></label></div>
+<div class="field"><label>Customer<input list="clist" name="customer" id="cust" value="{{pre.customer}}" required placeholder="Start typing name…"><datalist id="clist">{% for c in custs %}<option value="{{c.name}}">{{c.person}}{% if c.phone %} · {{c.phone}}{% endif %}</option>{% endfor %}</datalist></label></div>
 </div>
 <div id="itemBlock">
-<div class="field"><label>Item<input list="ilist" name="item" id="item" placeholder="Code or name…" autocomplete="off"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}{% if i.marathi %} · {{i.marathi}}{% endif %}</option>{% endfor %}</datalist></label></div>
+<div class="field"><label>Item<input list="ilist" name="item" id="item" value="{{pre.item}}" placeholder="Code or name…"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}{% if i.marathi %} · {{i.marathi}}{% endif %}</option>{% endfor %}</datalist></label></div>
 <div class="chips" id="chips">{% for i in items[:12] %}<button type="button" class="chip" data-id="{{i.id}}" title="{{i.name}} · ₹{{i.rate}}">{{i.id}}</button>{% endfor %}</div>
 <div class="frow3">
-<div class="field"><label>Qty<div class="stepper"><button type="button" id="qm">−</button><input type="number" name="qty" id="qty" step="any" value="1" min="0"><button type="button" id="qp">+</button></div></label></div>
-<div class="field"><label>Rate ₹<input type="number" name="rate" id="rate" step="any" placeholder="Auto"></label></div>
-<div class="field"><label>Paid now ₹<input type="number" name="paid" id="paid" step="any" value="0" min="0"></label></div>
+<div class="field"><label>Qty<div class="stepper"><button type="button" id="qm" tabindex="-1">−</button><input type="number" name="qty" id="qty" step="any" value="1" min="0"><button type="button" id="qp" tabindex="-1">+</button></div></label></div>
+<div class="field"><label>Rate ₹<input type="number" name="rate" id="rate" step="any" placeholder="Auto from item"></label></div>
+<div class="field"><label>Paid now ₹<input type="number" name="paid" id="paid" step="any" value="{{pre.amount if pre.type=='Payment' else '0'}}" min="0"></label></div>
 </div>
 </div>
 <div class="frow2">
 <div class="field"><label>Mode<select name="mode"><option>Cash</option><option>UPI</option><option>PhonePe SK</option><option>Paytm SK</option><option>PhonePe VK</option><option>PAYTM B QR</option><option>Bank</option></select></label></div>
 <div class="field"><label>Note <span class="mr">(मराठी चालेल)</span><input name="note" placeholder="e.g. wedding, 2 days"></label></div>
 </div>
-<div class="form-act"><button class="btn big" type="submit" id="saveBtn">Save Issue entry</button></div>
+<div id="fullDue"></div>
+<div class="form-act">
+<button class="btn big" type="submit" id="saveBtn">Save Issue entry</button>
+<label class="check" style="margin-top:10px"><input type="checkbox" name="again" value="1"> Keep form open for the next entry</label>
+</div>
 </div>
 <aside class="card summary">
 <h3>Summary</h3>
@@ -39,11 +43,12 @@
 <div class="sumrow"><span>Qty × Rate</span><b id="sCalc">—</b></div>
 <div class="total"><span id="sLbl">Bill amount</span><b id="bill">₹0</b></div>
 <div class="hint" id="hint">Bill = Qty × Rate. Paid is adjusted in khata.</div>
+<div class="note">Shortcuts: <b>Alt+2</b> this page · <b>Alt+1</b> overview · Enter in Customer jumps to Item.</div>
 </aside>
 </div>
 </form>
 <script>
-const rates={}; const names={};
+const rates={}, names={};
 {% for i in items %}rates["{{i.id}}"]={{i.rate or 0}}; names["{{i.id}}"]="{{i.name}}";{% endfor %}
 const typ=document.getElementById('typ'), item=document.getElementById('item'),
 rate=document.getElementById('rate'), qty=document.getElementById('qty'),
@@ -51,31 +56,42 @@ paid=document.getElementById('paid'), cust=document.getElementById('cust'),
 bill=document.getElementById('bill'), sItem=document.getElementById('sItem'),
 sCust=document.getElementById('sCust'), sCalc=document.getElementById('sCalc'),
 hint=document.getElementById('hint'), sLbl=document.getElementById('sLbl'),
-saveBtn=document.getElementById('saveBtn'), itemBlock=document.getElementById('itemBlock');
-let cur='Issue';
-document.querySelectorAll('.step').forEach(b=>b.addEventListener('click',()=>{
-cur=b.dataset.t; typ.value=cur;
-document.querySelectorAll('.step').forEach(x=>x.classList.toggle('on',x===b));
-if(cur==='Payment'){itemBlock.style.display='none';item.value='';}
+saveBtn=document.getElementById('saveBtn'), itemBlock=document.getElementById('itemBlock'),
+fullDue=document.getElementById('fullDue');
+let cur=typ.value || 'Issue';
+function setType(t){
+cur=t; typ.value=t;
+if(t==='Payment'){itemBlock.style.display='none'; item.value='';}
 else{itemBlock.style.display='';}
-saveBtn.textContent='Save '+cur+' entry';
-sLbl.textContent=(cur==='Payment')?'Payment amount':'Bill amount';
-hint.textContent=(cur==='Issue')?'Bill = Qty × Rate. Paid is adjusted in khata.':(cur==='Return')?'Only qty matters. Bill stays 0.':'Only money matters. Item not needed.';
-upd();}));
-document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{item.value=c.dataset.id;upd();item.focus();}));
-document.getElementById('qm').addEventListener('click',()=>{qty.value=Math.max(0,(parseFloat(qty.value||0)-1));upd();});
-document.getElementById('qp').addEventListener('click',()=>{qty.value=(parseFloat(qty.value||0)+1);upd();});
-function inr(n){return '₹'+(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});}
+document.querySelectorAll('.step').forEach(x=>x.classList.toggle('on', x.dataset.t===t));
+saveBtn.textContent='Save '+t+' entry';
+sLbl.textContent=(t==='Payment')?'Payment amount':'Bill amount';
+hint.textContent=(t==='Issue')?'Bill = Qty × Rate. Paid is adjusted in khata.':(t==='Return')?'Only qty matters — bill stays ₹0.':'Only money matters — item not needed.';
+upd();}
+document.querySelectorAll('.step').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.t)));
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{item.value=c.dataset.id; upd(); item.focus();}));
+document.getElementById('qm').addEventListener('click',()=>{qty.value=Math.max(0,parseFloat(qty.value||0)-1);upd();});
+document.getElementById('qp').addEventListener('click',()=>{qty.value=parseFloat(qty.value||0)+1;upd();});
+function inr(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});}
 function upd(){
-let r=parseFloat(rate.value||rates[item.value]||0);
-if(!rate.value&&rates[item.value])rate.value=rates[item.value];
-let q=parseFloat(qty.value||0), p=parseFloat(paid.value||0);
+if(!rate.value && rates[item.value]) rate.value=rates[item.value];
+let r=parseFloat(rate.value||rates[item.value]||0), q=parseFloat(qty.value||0), p=parseFloat(paid.value||0);
 let b=(cur==='Issue')?q*r:0;
 bill.textContent=(cur==='Payment')?inr(p):inr(b);
 sItem.textContent=item.value?((item.value+' · '+(names[item.value]||''))):'—';
 sCust.textContent=cust.value||'—';
 sCalc.textContent=(cur==='Payment')?('Paid '+inr(p)):((q||0)+' × ₹'+(r||0));
+if(cur==='Payment'){fullDue.innerHTML='<div class="quickpay"><button type="button" class="qp" data-add="500">+ ₹500</button><button type="button" class="qp" data-add="1000">+ ₹1,000</button><button type="button" class="qp" data-add="2000">+ ₹2,000</button><button type="button" class="qp" data-clear="1">Clear</button></div>';}
+else{fullDue.innerHTML='';}
 }
-[item,rate,qty,paid,cust].forEach(e=>e.addEventListener('input',upd));upd();
+fullDue.addEventListener('click',e=>{
+const b=e.target.closest('.qp'); if(!b) return;
+paid.value = b.dataset.clear ? 0 : Math.max(0, parseFloat(paid.value||0) + parseFloat(b.dataset.add));
+upd(); paid.focus();});
+[item,rate,qty,paid].forEach(e=>e.addEventListener('input',upd));
+cust.addEventListener('input',upd);
+cust.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(); if(cur!=='Payment') item.focus(); else paid.focus();}});
+setType(cur);
+if(!cust.value) cust.focus();
 </script>
 {% endblock %}

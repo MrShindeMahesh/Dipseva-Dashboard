@@ -14,12 +14,16 @@
 <aside class="side">
 <div class="brand"><span class="mark">D</span><div><b>DipSeva</b><small>RENTAL SUITE</small></div></div>
 <nav>
-<a href="/" class="{{ 'on' if request.path=='/' else '' }}"><i>◈</i> Overview</a>
-<a href="/entry" class="{{ 'on' if request.path=='/entry' else '' }}"><i>+</i> New Entry</a>
-<a href="/customers" class="{{ 'on' if request.path.startswith('/customer') else '' }}"><i>◍</i> Customers</a>
-<a href="/stock" class="{{ 'on' if request.path=='/stock' else '' }}"><i>▤</i> Inventory</a>
+<a href="/" class="{{ 'on' if request.path=='/' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M3 13h8V3H3zM13 21h8v-8h-8zM13 3v6h8V3zM3 21h8v-6H3z"/></svg> Overview<kbd>1</kbd></a>
+<a href="/entry" class="{{ 'on' if request.path=='/entry' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg> New Entry<kbd>2</kbd></a>
+<a href="/customers" class="{{ 'on' if request.path.startswith('/customer') else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9"/></svg> Customers<kbd>3</kbd></a>
+<a href="/stock" class="{{ 'on' if request.path=='/stock' else '' }}"><svg viewBox="0 0 24 24" class="ic"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg> Inventory<kbd>4</kbd></a>
 </nav>
-<div class="side-foot"><span class="dot"></span> Ledger connected<small>Dipseva_Ledger_NEW.xlsx</small></div>
+<div class="side-foot">
+<div class="live"><span class="dot"></span> Ledger connected</div>
+<small>Dipseva_Ledger_NEW.xlsx</small>
+<small class="kbdhint">Alt + 1…4 to switch · / to search</small>
+</div>
 </aside>
 <div class="main">
 <header class="bar">
@@ -27,7 +31,7 @@
 <div class="bar-act">{% block actions %}<a class="btn" href="/entry">+ New Entry</a>{% endblock %}</div>
 </header>
 {% with msgs = get_flashed_messages(with_categories=true) %}
-{% if msgs %}<div class="flash">{% for c,m in msgs %}<div class="f {{c}}">{{m}}</div>{% endfor %}</div>{% endif %}
+{% if msgs %}<div class="toasts">{% for c,m in msgs %}<div class="toast {{c}}"><svg viewBox="0 0 24 24" class="ic"><path d="M20 6L9 17l-5-5"/></svg><span>{{m}}</span><button type="button" onclick="this.parentNode.remove()">×</button></div>{% endfor %}</div>{% endif %}
 {% endwith %}
 {% block body %}{% endblock %}
 <footer>All entries write to the sheet · Sheet stays the backup</footer>

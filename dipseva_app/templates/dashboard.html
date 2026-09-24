@@ -3,48 +3,54 @@
 {% block head %}Overview{% endblock %}
 {% block sub %}Live position of money and material{% endblock %}
 {% block body %}
-<form method="get" class="toolbar">
-<div class="field"><label>Date<input type="date" name="today" value="{{today}}"></label></div>
-<div class="field"><label>&nbsp;<button class="btn ghost" type="submit">View</button></label></div>
+<form method="get" class="toolbar" id="tf">
+<div class="field"><label>Business date<input type="date" name="today" id="todayIn" value="{{today}}"></label></div>
+<div class="field"><label>&nbsp;<button class="btn" type="submit">Apply date</button></label></div>
+<div class="presets">{% for lbl,iso in presets %}<a class="preset {{'on' if iso==today else ''}}" href="/?today={{iso}}">{{lbl}}</a>{% endfor %}</div>
 </form>
 <div class="kpis">
 <div class="kpi"><small>Total billed</small><b>₹{{"{:,.0f}".format(s.billed)}}</b><span>Lifetime volume</span></div>
 <div class="kpi"><small>Collected</small><b>₹{{"{:,.0f}".format(s.received)}}</b><span>Cash + UPI in</span></div>
 <div class="kpi hero"><small>Receivable</small><b>₹{{"{:,.0f}".format(s.pending)}}</b><span>{{s.due_count}} customers pending</span></div>
-<div class="kpi"><small>Today</small><b>₹{{"{:,.0f}".format(s.today_paid)}}</b><span>Billed ₹{{"{:,.0f}".format(s.today_billed)}} · Low stock {{s.low|length}}</span></div>
+<div class="kpi"><small>On {{today}}</small><b>₹{{"{:,.0f}".format(s.today_paid)}}</b><span>Billed ₹{{"{:,.0f}".format(s.today_billed)}} · Low stock {{s.low|length}}</span></div>
 </div>
 <div class="grid">
 <div class="card">
 <h3>Top receivables</h3><div class="sub">Who owes the most — collect first</div>
-<table><tr><th>Customer</th><th class="n">Billed</th><th class="n">Paid</th><th class="n">Due</th><th class="n">Out</th></tr>
+<table><thead><tr><th data-sort="text">Customer</th><th class="n" data-sort="num">Billed</th><th class="n" data-sort="num">Paid</th><th class="n" data-sort="num">Due</th><th class="n" data-sort="num">Out</th><th></th></tr></thead>
+<tbody>
 {% for e in s.khata[:10] %}
-<tr><td><a href="/customer/{{e.name}}">{{e.name}}</a></td>
-<td class="n">{{"{:,.0f}".format(e.billed)}}</td><td class="n">{{"{:,.0f}".format(e.received)}}</td>
-<td class="n neg">{{"{:,.0f}".format(e.pending)}}</td><td class="n">{{e.outside}}</td></tr>
-{% endfor %}</table>
-<br><a class="btn ghost" href="/customers">All customers</a>
+<tr data-href="/customer/{{e.name}}"><td><b>{{e.name}}</b></td>
+<td class="n" data-v="{{e.billed}}">{{"{:,.0f}".format(e.billed)}}</td>
+<td class="n" data-v="{{e.received}}">{{"{:,.0f}".format(e.received)}}</td>
+<td class="n neg" data-v="{{e.pending}}">{{"{:,.0f}".format(e.pending)}}</td>
+<td class="n" data-v="{{e.outside}}">{{e.outside}}</td>
+<td class="n"><a class="iconbtn" title="Record payment" href="/entry?customer={{e.name|urlencode}}&type=Payment&amount={{(e.pending|round|int) if e.pending>0 else ''}}"><svg viewBox="0 0 24 24" class="ic"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></a></td></tr>
+{% endfor %}</tbody></table>
+<br><a class="btn ghost sm" href="/customers">All customers →</a>
 </div>
 <div class="card">
-<h3>Collections · 10 days</h3><div class="sub">Daily cash-in trend</div>
-<div class="bars">{% for d in s.days %}<div class="barcol" title="{{d.date}} ₹{{d.received}}" style="height:{{ (d.received/(s.days|map(attribute='received')|max or 1))*100 }}%"></div>{% endfor %}</div>
+<h3>Collections · 10 days</h3><div class="sub">Daily cash-in trend, ending {{today}}</div>
+<div class="bars">{% for d in s.days %}<div class="barcol" title="{{d.date}} · billed ₹{{"{:,.0f}".format(d.billed)}} · in ₹{{"{:,.0f}".format(d.received)}}" style="height:{{ ((d.received/(s.days|map(attribute='received')|max or 1))*100)|round(1) }}%"></div>{% endfor %}</div>
 <div class="barlbl">{% for d in s.days %}<span>{{d.date}}</span>{% endfor %}</div>
 <br>
-<table><tr><th>Date</th><th class="n">Bill</th><th class="n">In</th></tr>
-{% for d in s.days[-5:]|reverse %}<tr><td>{{d.date}}</td><td class="n">{{"{:,.0f}".format(d.billed)}}</td><td class="n pos">{{"{:,.0f}".format(d.received)}}</td></tr>{% endfor %}</table>
+<table><thead><tr><th data-sort="text">Date</th><th class="n" data-sort="num">Bill</th><th class="n" data-sort="num">In</th></tr></thead><tbody>
+{% for d in s.days[-5:]|reverse %}<tr><td>{{d.date}}</td><td class="n" data-v="{{d.billed}}">{{"{:,.0f}".format(d.billed)}}</td><td class="n pos" data-v="{{d.received}}">{{"{:,.0f}".format(d.received)}}</td></tr>{% endfor %}</tbody></table>
 </div>
 </div>
 <div class="card" style="margin-top:14px">
-<h3>Latest activity</h3><div class="sub">Most recent ledger lines</div>
-<table><tr><th>Date</th><th>Customer</th><th>Type</th><th>Item</th><th class="n">Qty</th><th class="n">Bill</th><th class="n">Paid</th></tr>
+<h3>Latest activity</h3><div class="sub">Most recent ledger lines — click a customer to open the statement</div>
+<table><thead><tr><th>Date</th><th>Customer</th><th>Type</th><th>Item</th><th class="n">Qty</th><th class="n">Bill</th><th class="n">Paid</th><th>Note</th></tr></thead><tbody>
 {% for r in recent %}
-<tr><td>{{r.date_disp}}</td><td>{{r.customer}}</td><td><span class="pill {{r.type}}">{{r.type}}</span></td>
-<td>{{r.item}} {{r.item_name}}</td><td class="n">{{r.qty}}</td><td class="n">{{"{:,.0f}".format(r.bill)}}</td><td class="n">{{"{:,.0f}".format(r.paid)}}</td></tr>
-{% endfor %}</table>
+<tr data-href="/customer/{{r.customer|urlencode}}"><td>{{r.date_disp}}</td><td><b>{{r.customer}}</b></td><td><span class="pill {{r.type}}">{{r.type}}</span></td>
+<td>{{r.item}} {{r.item_name}}</td><td class="n">{{r.qty}}</td><td class="n">{{"{:,.0f}".format(r.bill)}}</td><td class="n pos">{{"{:,.0f}".format(r.paid)}}</td><td><span class="mr">{{r.note}}</span></td></tr>
+{% endfor %}</tbody></table>
 </div>
 {% if s.low %}
 <div class="card" style="margin-top:14px"><h3>Low stock</h3><div class="sub">Refill before next booking</div>
-<table><tr><th>Item</th><th class="n">In hand</th><th class="n">Min</th></tr>
-{% for e in s.low %}<tr><td>{{e.id}} · {{e.name}}</td><td class="n neg">{{e.inhand}}</td><td class="n">{{e.min}}</td></tr>{% endfor %}</table>
+<table><thead><tr><th>Item</th><th class="n">In hand</th><th class="n">Min</th><th class="n">Short by</th></tr></thead><tbody>
+{% for e in s.low %}<tr><td><b>{{e.id}}</b> · {{e.name}}</td><td class="n neg">{{e.inhand}}</td><td class="n">{{e.min}}</td><td class="n">{{(e.min-e.inhand)|round|int}}</td></tr>{% endfor %}</tbody></table>
+<br><a class="btn ghost sm" href="/stock">Open inventory →</a>
 </div>
 {% endif %}
 {% endblock %}

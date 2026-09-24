@@ -1,24 +1,61 @@
 {% extends "base.html" %}
 {% block title %}{{info.name}}{% endblock %}
 {% block head %}{{info.name}}{% endblock %}
-{% block sub %}{% if master %}{{master.phone}} · {{master.ctype}}{% else %}Customer statement{% endif %}{% endblock %}
+{% block sub %}{% if master %}{{master.person}} · {{master.phone}} · {{master.ctype}}{% else %}Customer statement{% endif %}{% endblock %}
+{% block actions %}
+<a class="btn ghost sm" href="/customers">← All customers</a>
+<a class="btn sm" href="/entry?customer={{info.name|urlencode}}&type=Issue">+ New issue</a>
+{% endblock %}
 {% block body %}
 <div class="kpis">
-<div class="kpi"><small>Billed</small><b>₹{{"{:,.0f}".format(info.billed)}}</b></div>
-<div class="kpi"><small>Paid</small><b>₹{{"{:,.0f}".format(info.received)}}</b></div>
-<div class="kpi rose"><small>Due</small><b>₹{{"{:,.0f}".format(info.pending)}}</b></div>
-<div class="kpi"><small>Material outside</small><b>{{info.outside}}</b></div>
+<div class="kpi"><small>Billed</small><b>₹{{"{:,.0f}".format(info.billed)}}</b><span>{{bills}} billed entries</span></div>
+<div class="kpi"><small>Paid</small><b>₹{{"{:,.0f}".format(info.received)}}</b><span>{{lines}} ledger lines</span></div>
+<div class="kpi hero"><small>Balance due</small><b>₹{{"{:,.0f}".format(info.pending)}}</b><span>{% if info.pending>0 %}Collect this amount{% else %}All clear ✓{% endif %}</span></div>
+<div class="kpi"><small>Material outside</small><b>{{info.outside}}</b><span>{{items_out}} units given, not back</span></div>
 </div>
+{% if info.pending>0 %}
 <div class="card" style="margin-top:14px">
-<h3>Share</h3><div class="sub">One-tap WhatsApp text</div>
-<p><button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('wa').textContent);this.textContent='Copied'">Copy WhatsApp text</button></p>
-<p id="wa" class="wa">{{wa}}</p>
-<table><tr><th>Date</th><th>Type</th><th>Item</th><th class="n">Qty</th><th class="n">Bill</th><th class="n">Paid</th><th>Note</th></tr>
+<h3>Collect payment</h3><div class="sub">Amount is pre-filled — change it if part payment</div>
+<div class="quickpay">
+<a class="btn red" href="/entry?customer={{info.name|urlencode}}&type=Payment&amount={{info.pending|round|int}}">Record payment ₹{{info.pending|round|int}}</a>
+{% if wa_url %}<a class="btn wa" href="{{wa_url}}" target="_blank" rel="noopener">Send WhatsApp reminder</a>
+{% else %}<a class="btn wa" href="https://wa.me/?text={{wa|urlencode}}" target="_blank" rel="noopener">Send WhatsApp reminder</a>{% endif %}
+{% if call_url %}<a class="btn ghost" href="{{call_url}}">Call {{master.phone}}</a>{% endif %}
+<button class="btn ghost" type="button" data-copy="#wa">Copy message</button>
+</div>
+{% if not phone %}
+<form method="post" action="/customer/{{info.name|urlencode}}/phone" class="toolbar no-print" style="margin-top:14px">
+<div class="field"><label>Save this customer's WhatsApp number (once)<input name="phone" placeholder="10-digit mobile" inputmode="numeric" style="min-width:220px"></label></div>
+<div class="field"><label>&nbsp;<button class="btn sm" type="submit">Save number</button></label></div>
+<div class="field"><span class="note">Stored in the Customers sheet · then one-tap reminders work</span></div>
+</form>
+{% else %}<div class="note">Reminder goes to {{master.phone}}</div>{% endif %}
+</div>
+{% endif %}
+<div class="card" style="margin-top:14px">
+<div class="filterbar no-print">
+<input type="search" data-filter="#ltab" placeholder="Filter this ledger…  (press /)" autocomplete="off">
+<span class="countchip"><span data-count="#ltab">{{lines}}</span> rows</span>
+<button class="btn ghost sm" type="button" onclick="window.print()">Print / PDF</button>
+{% if wa_url %}<a class="btn ghost sm" href="{{wa_url}}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+</div>
+<table id="ltab"><thead><tr><th data-sort="text">Date</th><th data-sort="text">Type</th><th data-sort="text">Item</th>
+<th class="n" data-sort="num">Qty</th><th class="n" data-sort="num">Rate</th><th class="n" data-sort="num">Bill</th>
+<th class="n" data-sort="num">Paid</th><th class="n" data-sort="num">Balance</th><th>Mode</th><th>Note</th></tr></thead><tbody>
 {% for r in rows %}
 <tr><td>{{r.date_disp}}</td><td><span class="pill {{r.type}}">{{r.type}}</span></td>
-<td>{{r.item}} {{r.item_name}}</td><td class="n">{{r.qty}}</td>
-<td class="n">{{"{:,.0f}".format(r.bill)}}</td><td class="n">{{"{:,.0f}".format(r.paid)}}</td><td><span class="mr">{{r.note}}</span></td></tr>
-{% endfor %}</table>
-<br><a class="btn ghost" href="/customers">Back</a>
+<td>{{r.item}}{% if r.item_name and r.item_name != r.item %} {{r.item_name}}{% endif %}</td>
+<td class="n">{{r.qty}}</td><td class="n" data-v="{{r.rate}}">{{r.rate}}</td>
+<td class="n" data-v="{{r.bill}}">{{'{:,.0f}'.format(r.bill)}}</td>
+<td class="n pos" data-v="{{r.paid}}">{{'{:,.0f}'.format(r.paid)}}</td>
+<td class="n" data-v="{{bals[loop.index0]}}"><b>{{'{:,.0f}'.format(bals[loop.index0])}}</b></td>
+<td>{{r.mode}}</td><td><span class="mr">{{r.note}}</span></td></tr>
+{% endfor %}</tbody></table>
+<div class="empty" data-empty="#ltab" hidden>Nothing matches that filter.</div>
+</div>
+<div class="card" style="margin-top:14px">
+<h3>Share text</h3><div class="sub">Paste into WhatsApp or SMS — no dashes, plain words</div>
+<p id="wa" class="wa">{{wa}}</p>
+<button class="btn ghost sm" type="button" data-copy="#wa">Copy text</button>
 </div>
 {% endblock %}

@@ -31,18 +31,24 @@ python3 app.py
 ```
 
 ## Pages
-- `/` Home — Billed / Received / Pending / Today / Top due / 10-day collection / Recent / Low stock
-- `/entry` — new Issue / Return / Payment (rate auto, bill live)
-- `/customers`, `/customer/<name>` — khata + WhatsApp copy text
-- `/stock` — InHand = Opening + Return − Given
+- `/` Home — business-date presets, 4 KPIs, top receivables (click row → statement, ₹ icon → record payment), 10-day collections, recent activity, low stock
+- `/entry` — type cards (Issue / Return / Payment) that reshape the form, quick item chips, qty stepper, live summary, optional "keep form open"
+- `/customers` — KPIs + instant search + sortable columns + pending-% meter + row actions
+- `/customer/<name>` — statement with running balance, collect-payment panel, WhatsApp reminder, per-customer phone save, print/PDF
+- `/stock` — low-stock KPIs, health meters, status badges, filter + only-low toggle
 - `/api/summary` — JSON
 
-## Design
-- Fonts: Mukta + Noto Sans Devanagari (Marathi must)
-- Colours: Navy #1B2A4E, Saffron #F59E0B/#D97706, Teal #0D9488
+## UI / UX
+- Warm Ivory theme: ivory `#FAF7F0` bg, white cards, deep navy `#1E2A5A`, maroon accent, serif headings — no gradients/neon
+- Toasts for save/error feedback, clickable rows, sortable + sticky table headers, live filters (`/` to focus, `Esc` to clear)
+- Keyboard: `Alt+1` overview, `Alt+2` entry, `Alt+3` customers, `Alt+4` inventory
+- Prefill deep links: `/entry?customer=X&type=Payment&amount=Y`, `/entry?item=CH&type=Issue`
+- Print stylesheet on the statement (sidebar/actions hidden on paper)
+- Fonts: Inter + Mukta (Marathi names/notes)
 - Sheet tab colours match web cards
 
 ## Note
-- Entry only from Dashboard. Sheet is backup if issue happens.
+- Entry only from the app. Sheet is backup if issue happens.
 - Old file `Ledger JULY 2026.xlsx` is reference only, not used by app.
 - This repo includes `*.xlsx` with customer data. Make PRIVATE if you add real phones.
+- openpyxl gotcha: `ws.cell(r, c, None)` does **not** blank a cell — it ignores `None`. Use `ws.cell(r, c).value = None`.

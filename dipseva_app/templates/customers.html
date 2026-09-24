@@ -3,13 +3,41 @@
 {% block head %}Customers{% endblock %}
 {% block sub %}Running khata — multi-day balance per customer{% endblock %}
 {% block body %}
-<div class="card">
-<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Search customer"><button class="btn" type="submit">Search</button></form>
-<table><tr><th>Customer</th><th class="n">Billed</th><th class="n">Paid</th><th class="n">Due</th><th class="n">Outside</th><th></th></tr>
+{% set due = all_khata|sum(attribute='pending') %}
+{% set billed = all_khata|sum(attribute='billed') %}
+{% set paid = all_khata|sum(attribute='received') %}
+{% set out = all_khata|sum(attribute='outside') %}
+{% set owing = all_khata|selectattr('pending','gt',0)|list %}
+<div class="kpis">
+<div class="kpi"><small>Customers on books</small><b>{{all_khata|length}}</b><span>with any activity</span></div>
+<div class="kpi"><small>Total billed</small><b>₹{{"{:,.0f}".format(billed)}}</b><span>Paid ₹{{"{:,.0f}".format(paid)}}</span></div>
+<div class="kpi hero"><small>Total receivable</small><b>₹{{"{:,.0f}".format(due)}}</b><span>{{owing|length}} customers owe money</span></div>
+<div class="kpi"><small>Material outside</small><b>{{out|round|int}}</b><span>units not returned</span></div>
+</div>
+<div class="card" style="margin-top:14px">
+<div class="filterbar">
+<input type="search" id="cq" data-filter="#ctab" placeholder="Search name, or type…  (press /)" autocomplete="off">
+<span class="countchip"><span data-count="#ctab">{{khata|length}}</span> shown</span>
+<a class="preset {{'on' if not only_due else ''}}" href="/customers">All customers</a>
+<a class="preset {{'on' if only_due else ''}}" href="/customers?due=1">Only pending due</a>
+</div>
+<table id="ctab"><thead><tr>
+<th data-sort="text">Customer</th><th class="n" data-sort="num">Billed</th><th class="n" data-sort="num">Paid</th>
+<th class="n" data-sort="num">Due</th><th class="n" data-sort="num">Out</th><th data-sort="num">Pending %</th><th></th></tr></thead><tbody>
 {% for e in khata %}
-<tr><td><b>{{e.name}}</b></td><td class="n">{{"{:,.0f}".format(e.billed)}}</td><td class="n">{{"{:,.0f}".format(e.received)}}</td>
-<td class="n neg">{{"{:,.0f}".format(e.pending)}}</td><td class="n">{{e.outside}}</td>
-<td class="n"><a class="btn ghost" href="/customer/{{e.name}}">Statement</a></td></tr>
-{% endfor %}</table>
+<tr data-href="/customer/{{e.name|urlencode}}">
+<td><b>{{e.name}}</b>{% if e.opening %} <span class="note">(opening ₹{{"{:,.0f}".format(e.opening)}})</span>{% endif %}</td>
+<td class="n" data-v="{{e.billed}}">{{"{:,.0f}".format(e.billed)}}</td>
+<td class="n" data-v="{{e.received}}">{{"{:,.0f}".format(e.received)}}</td>
+<td class="n {{'neg' if e.pending>0 else 'pos'}}" data-v="{{e.pending}}">{{"{:,.0f}".format(e.pending)}}</td>
+<td class="n" data-v="{{e.outside}}">{{e.outside}}</td>
+<td data-v="{{(e.pending/e.billed*100) if e.billed else 0}}"><div class="meter {{'low' if e.pending>0 else ''}}"><i style="width:{{([(e.pending/e.billed*100) if e.billed else 0,100]|min)|round|int}}%"></i></div></td>
+<td class="n"><span class="actions">
+<a class="iconbtn" title="Statement" href="/customer/{{e.name|urlencode}}"><svg viewBox="0 0 24 24" class="ic"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h6"/></svg></a>
+<a class="iconbtn" title="Record payment" href="/entry?customer={{e.name|urlencode}}&type=Payment&amount={{(e.pending|round|int) if e.pending>0 else ''}}"><svg viewBox="0 0 24 24" class="ic"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></a>
+</span></td></tr>
+{% endfor %}</tbody></table>
+<div class="empty" data-empty="#ctab" hidden>No customer matches that search.</div>
+<div class="note">Tip: click anywhere on a row to open that customer's statement.</div>
 </div>
 {% endblock %}

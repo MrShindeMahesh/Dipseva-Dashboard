@@ -42,6 +42,8 @@ def summarize(rows, items, custs, today=None):
     for e in stock:
         e["inhand"] = e["opening"] + e["returned"] - e["given"]
         e["status"] = "LOW" if e["inhand"] < e["min"] else ("EMPTY" if e["inhand"] == 0 and (e["given"] or e["opening"]) else "OK")
+        raw = (e["inhand"] / e["min"] * 100) if e["min"] else (100 if e["inhand"] > 0 else 0)
+        e["health"] = max(0, min(100, raw))
     low = [e for e in stock if e["status"] == "LOW"]
     tb = sum(r["bill"] for r in rows if r["date"] == today)
     tp = sum(r["paid"] for r in rows if r["date"] == today)
