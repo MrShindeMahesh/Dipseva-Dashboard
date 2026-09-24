@@ -1,15 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Stock{% endblock %}
+{% block title %}Inventory{% endblock %}
+{% block head %}Inventory{% endblock %}
+{% block sub %}In hand = Opening + Returned − Given{% endblock %}
 {% block body %}
-<div class="panel">
-<h3>📦 माल • Stock (In Hand = Opening + Return − Given)</h3>
-<table><tr><th class="l">Item</th><th>Opening</th><th>Given</th><th>Returned</th><th>In Hand</th><th>Min</th><th>Revenue</th><th>Status</th></tr>
+<div class="card">
+<table><tr><th>Item</th><th class="n">Opening</th><th class="n">Given</th><th class="n">Back</th><th class="n">In hand</th><th class="n">Min</th><th class="n">Revenue</th><th>Status</th></tr>
 {% for e in stock %}
 {% if e.opening or e.given or e.returned or e.revenue %}
-<tr><td class="l"><b>{{e.id}}</b> • {{e.name}} {% if e.marathi %}• {{e.marathi}}{% endif %}</td>
-<td>{{e.opening}}</td><td>{{e.given}}</td><td>{{e.returned}}</td>
-<td class="{{'neg' if e.status=='LOW' else ''}}"><b>{{e.inhand}}</b></td>
-<td>{{e.min}}</td><td>{{"{:,.0f}".format(e.revenue)}}</td><td>{{e.status}}</td></tr>
+<tr><td><b>{{e.id}}</b> · {{e.name}} {% if e.marathi %}<span class="mr">· {{e.marathi}}</span>{% endif %}</td>
+<td class="n">{{e.opening}}</td><td class="n">{{e.given}}</td><td class="n">{{e.returned}}</td>
+<td class="n {{'neg' if e.status=='LOW' else ''}}"><b>{{e.inhand}}</b></td>
+<td class="n">{{e.min}}</td><td class="n">{{"{:,.0f}".format(e.revenue)}}</td><td>{{e.status}}</td></tr>
 {% endif %}{% endfor %}</table>
 </div>
 {% endblock %}

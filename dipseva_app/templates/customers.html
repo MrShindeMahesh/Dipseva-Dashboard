@@ -1,14 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Khata{% endblock %}
+{% block title %}Customers{% endblock %}
+{% block head %}Customers{% endblock %}
+{% block sub %}Running khata — multi-day balance per customer{% endblock %}
 {% block body %}
-<div class="panel">
-<h3>👥 ग्राहक खाते • Khata</h3>
-<form class="search" method="get"><input name="q" value="{{q}}" placeholder="शोधा • Search customer"><button class="btn" type="submit">शोध</button></form>
-<table><tr><th class="l">ग्राहक</th><th>बिल</th><th>जमा</th><th>बाकी</th><th>बाहेर माल</th><th></th></tr>
+<div class="card">
+<form class="search" method="get"><input name="q" value="{{q}}" placeholder="Search customer"><button class="btn" type="submit">Search</button></form>
+<table><tr><th>Customer</th><th class="n">Billed</th><th class="n">Paid</th><th class="n">Due</th><th class="n">Outside</th><th></th></tr>
 {% for e in khata %}
-<tr><td class="l"><b>{{e.name}}</b></td><td>{{"{:,.0f}".format(e.billed)}}</td><td>{{"{:,.0f}".format(e.received)}}</td>
-<td class="neg">{{"{:,.0f}".format(e.pending)}}</td><td>{{e.outside}}</td>
-<td><a class="btn ghost" href="/customer/{{e.name}}">बिल पहा</a></td></tr>
+<tr><td><b>{{e.name}}</b></td><td class="n">{{"{:,.0f}".format(e.billed)}}</td><td class="n">{{"{:,.0f}".format(e.received)}}</td>
+<td class="n neg">{{"{:,.0f}".format(e.pending)}}</td><td class="n">{{e.outside}}</td>
+<td class="n"><a class="btn ghost" href="/customer/{{e.name}}">Statement</a></td></tr>
 {% endfor %}</table>
 </div>
 {% endblock %}

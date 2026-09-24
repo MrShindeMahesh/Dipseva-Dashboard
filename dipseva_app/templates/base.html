@@ -1,28 +1,38 @@
 <!doctype html>
-<html lang="mr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DipSeva • {% block title %}Dashboard{% endblock %}</title>
+<title>DipSeva · {% block title %}Overview{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
 <body>
-<header class="top">
-<div class="brand"><span class="logo">DS</span><div><b>DipSeva Rental</b><small>भाडे हिशोब • Ledger + Dashboard</small></div></div>
+<div class="shell">
+<aside class="side">
+<div class="brand"><span class="mark">D</span><div><b>DipSeva</b><small>RENTAL SUITE</small></div></div>
 <nav>
-<a href="/" class="{{ 'on' if request.path=='/' else '' }}">🏠 Home<br><small>मुख्य</small></a>
-<a href="/entry" class="{{ 'on' if request.path=='/entry' else '' }}">➕ Entry<br><small>नोंद</small></a>
-<a href="/customers" class="{{ 'on' if request.path.startswith('/customer') else '' }}">👥 Khata<br><small>खाते</small></a>
-<a href="/stock" class="{{ 'on' if request.path=='/stock' else '' }}">📦 Stock<br><small>माल</small></a>
+<a href="/" class="{{ 'on' if request.path=='/' else '' }}"><i>◈</i> Overview</a>
+<a href="/entry" class="{{ 'on' if request.path=='/entry' else '' }}"><i>+</i> New Entry</a>
+<a href="/customers" class="{{ 'on' if request.path.startswith('/customer') else '' }}"><i>◍</i> Customers</a>
+<a href="/stock" class="{{ 'on' if request.path=='/stock' else '' }}"><i>▤</i> Inventory</a>
 </nav>
+<div class="side-foot"><span class="dot"></span> Ledger connected<small>Dipseva_Ledger_NEW.xlsx</small></div>
+</aside>
+<div class="main">
+<header class="bar">
+<div><h1>{% block head %}Overview{% endblock %}</h1><p>{% block sub %}Live position of money and material{% endblock %}</p></div>
+<div class="bar-act">{% block actions %}<a class="btn" href="/entry">+ New Entry</a>{% endblock %}</div>
 </header>
 {% with msgs = get_flashed_messages(with_categories=true) %}
 {% if msgs %}<div class="flash">{% for c,m in msgs %}<div class="f {{c}}">{{m}}</div>{% endfor %}</div>{% endif %}
 {% endwith %}
-<main>{% block body %}{% endblock %}</main>
-<footer>Sheet backup: <code>Dipseva_Ledger_NEW.xlsx</code> • Entry फक्त Dashboard मधून करा</footer>
+{% block body %}{% endblock %}
+<footer>All entries write to the sheet · Sheet stays the backup</footer>
+</div>
+</div>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

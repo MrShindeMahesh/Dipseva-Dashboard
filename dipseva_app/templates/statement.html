@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 {% block title %}{{info.name}}{% endblock %}
+{% block head %}{{info.name}}{% endblock %}
+{% block sub %}{% if master %}{{master.phone}} · {{master.ctype}}{% else %}Customer statement{% endif %}{% endblock %}
 {% block body %}
-<div class="panel">
-<h3>🧾 {{info.name}} {% if master %}• {{master.phone}} • {{master.ctype}}{% endif %}</h3>
-<div class="cards">
-<div class="card bill"><small>बिल</small><b>₹{{"{:,.0f}".format(info.billed)}}</b></div>
-<div class="card got"><small>जमा</small><b>₹{{"{:,.0f}".format(info.received)}}</b></div>
-<div class="card due"><small>बाकी</small><b>₹{{"{:,.0f}".format(info.pending)}}</b></div>
-<div class="card warn"><small>बाहेर माल</small><b>{{info.outside}}</b></div>
+<div class="kpis">
+<div class="kpi gold"><small>Billed</small><b>₹{{"{:,.0f}".format(info.billed)}}</b></div>
+<div class="kpi green"><small>Paid</small><b>₹{{"{:,.0f}".format(info.received)}}</b></div>
+<div class="kpi rose"><small>Due</small><b>₹{{"{:,.0f}".format(info.pending)}}</b></div>
+<div class="kpi teal"><small>Material outside</small><b>{{info.outside}}</b></div>
 </div>
-<p><button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('wa').textContent);this.textContent='Copied ✓'">📋 WhatsApp Copy</button></p>
-<p id="wa" class="panel">{{wa}}</p>
-<table><tr><th>Date</th><th>Type</th><th class="l">Item</th><th>Qty</th><th>Bill</th><th>Paid</th><th class="l">Note</th></tr>
+<div class="card" style="margin-top:14px">
+<h3>Share</h3><div class="sub">One-tap WhatsApp text</div>
+<p><button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('wa').textContent);this.textContent='Copied'">Copy WhatsApp text</button></p>
+<p id="wa" class="wa">{{wa}}</p>
+<table><tr><th>Date</th><th>Type</th><th>Item</th><th class="n">Qty</th><th class="n">Bill</th><th class="n">Paid</th><th>Note</th></tr>
 {% for r in rows %}
-<tr><td>{{r.date_disp}}</td><td><span class="tag {{r.type}}">{{r.type}}</span></td>
-<td class="l">{{r.item}} {{r.item_name}}</td><td>{{r.qty}}</td>
-<td>{{"{:,.0f}".format(r.bill)}}</td><td>{{"{:,.0f}".format(r.paid)}}</td><td class="l">{{r.note}}</td></tr>
+<tr><td>{{r.date_disp}}</td><td><span class="pill {{r.type}}">{{r.type}}</span></td>
+<td>{{r.item}} {{r.item_name}}</td><td class="n">{{r.qty}}</td>
+<td class="n">{{"{:,.0f}".format(r.bill)}}</td><td class="n">{{"{:,.0f}".format(r.paid)}}</td><td><span class="mr">{{r.note}}</span></td></tr>
 {% endfor %}</table>
-<br><a class="btn ghost" href="/customers">← परत</a>
+<br><a class="btn ghost" href="/customers">Back</a>
 </div>
 {% endblock %}

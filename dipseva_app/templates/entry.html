@@ -1,21 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Entry{% endblock %}
+{% block title %}New Entry{% endblock %}
+{% block head %}New Entry{% endblock %}
+{% block sub %}Issue · Return · Payment — one form{% endblock %}
 {% block body %}
-<div class="panel">
-<h3>➕ नवीन नोंद • New Entry</h3>
-<p style="color:#64748B">Issue = सामान दिले &nbsp;•&nbsp; Return = परत आले &nbsp;•&nbsp; Payment = फक्त पैसे जमा</p>
+<div class="card">
+<h3>Entry details</h3><div class="sub">Rate auto-fills from Inventory. Bill = Qty × Rate for Issue only.</div>
 <form method="post" class="form" id="f">
-<div><label>Date / तारीख<input type="date" name="date" value="{{today}}" required></label></div>
-<div><label>Customer / ग्राहक<input list="clist" name="customer" required placeholder="निवडा / लिहा"><datalist id="clist">{% for c in custs %}<option value="{{c.name}}">{% endfor %}</datalist></label></div>
-<div><label>Type / प्रकार<select name="type" id="typ"><option>Issue</option><option>Return</option><option>Payment</option></select></label></div>
-<div><label>Item / वस्तू<input list="ilist" name="item" id="item" placeholder="कोड"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} • ₹{{i.rate}}</option>{% endfor %}</datalist></label></div>
-<div><label>Qty / नग<input type="number" name="qty" id="qty" step="any" value="1"></label></div>
-<div><label>Rate / भाडे<input type="number" name="rate" id="rate" step="any"></label></div>
-<div><label>Paid now / आता जमा<input type="number" name="paid" step="any" value="0"></label></div>
-<div><label>Pay Mode<select name="mode"><option>Cash</option><option>UPI</option><option>PhonePe SK</option><option>Paytm SK</option><option>PhonePe VK</option><option>PAYTM B QR</option><option>Bank</option></select></label></div>
-<div style="grid-column:1/-1"><label>Note / नोंद<input name="note" placeholder="उदा. लग्न, 2 दिवस"></label></div>
-<div style="grid-column:1/-1"><b id="bill">Bill: ₹0</b></div>
-<div style="grid-column:1/-1"><button class="btn" type="submit">💾 Save • जतन करा</button> <a class="btn ghost" href="/">रद्द</a></div>
+<div class="field"><label>Date<input type="date" name="date" value="{{today}}" required></label></div>
+<div class="field"><label>Customer<input list="clist" name="customer" required placeholder="Type or pick"><datalist id="clist">{% for c in custs %}<option value="{{c.name}}">{% endfor %}</datalist></label></div>
+<div class="field"><label>Entry type<select name="type" id="typ"><option>Issue</option><option>Return</option><option>Payment</option></select></label></div>
+<div class="field"><label>Item<input list="ilist" name="item" id="item" placeholder="Code"><datalist id="ilist">{% for i in items %}<option value="{{i.id}}">{{i.name}} · ₹{{i.rate}}</option>{% endfor %}</datalist></label></div>
+<div class="field"><label>Qty<input type="number" name="qty" id="qty" step="any" value="1"></label></div>
+<div class="field"><label>Rate<input type="number" name="rate" id="rate" step="any"></label></div>
+<div class="field"><label>Paid now<input type="number" name="paid" step="any" value="0"></label></div>
+<div class="field"><label>Mode<select name="mode"><option>Cash</option><option>UPI</option><option>PhonePe SK</option><option>Paytm SK</option><option>PhonePe VK</option><option>PAYTM B QR</option><option>Bank</option></select></label></div>
+<div class="field" style="grid-column:1/-1"><label>Note (optional — <span class="mr">मराठीत लिहू शकता</span>)<input name="note" placeholder="e.g. wedding, 2 days"></label></div>
+<div class="billbox"><span>Bill preview</span><b id="bill">₹0</b></div>
+<div style="grid-column:1/-1"><button class="btn" type="submit">Save entry</button> <a class="btn ghost" href="/">Cancel</a></div>
 </form>
 </div>
 <script>
@@ -23,7 +24,7 @@ const rates={}; {% for i in items %}rates["{{i.id}}"]={{i.rate or 0}};{% endfor 
 const item=document.getElementById('item'), rate=document.getElementById('rate'),
 qty=document.getElementById('qty'), typ=document.getElementById('typ'), bill=document.getElementById('bill');
 function upd(){ const r=parseFloat(rate.value||rates[item.value]||0); if(!rate.value&&rates[item.value])rate.value=rates[item.value];
-const q=parseFloat(qty.value||0); bill.textContent='Bill: ₹'+((typ.value==='Issue')?q*r:0).toLocaleString('en-IN'); }
+const q=parseFloat(qty.value||0); bill.textContent='₹'+((typ.value==='Issue')?q*r:0).toLocaleString('en-IN'); }
 [item,rate,qty,typ].forEach(e=>e.addEventListener('input',upd)); upd();
 typ.addEventListener('change',()=>{ if(typ.value==='Payment'){item.value='';qty.value='';} });
 </script>
